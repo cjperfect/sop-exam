@@ -1,0 +1,28 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Lightbulb } from 'lucide-react'
+
+interface ExamSuggestionPanelProps {
+  suggestions: string
+}
+
+export function ExamSuggestionPanel({
+  suggestions,
+}: ExamSuggestionPanelProps) {
+  if (!suggestions) return null
+
+  return (
+    <Card className='border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/10'>
+      <CardHeader className='pb-3'>
+        <CardTitle className='flex items-center gap-2 text-base'>
+          <Lightbulb className='h-5 w-5 text-amber-600' />
+          AI 学习建议
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className='whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground'>
+          {suggestions}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}

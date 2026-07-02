@@ -1,0 +1,87 @@
+# SOP 在线学习与考核平台
+
+企业标准作业程序（SOP）在线学习与考核系统。员工可在线阅读 SOP 文档、做笔记，并通过 AI 自动生成的试卷进行知识考核，系统自动评分并给出学习建议。
+
+## 功能特性
+
+### 学习模块
+- **SOP 文档库**：分类浏览企业标准作业程序文档，支持 Markdown 格式阅读
+- **SOP 阅读器**：沉浸式阅读体验，支持分类筛选和关键词搜索
+- **AI 出题考试**：基于 SOP 内容自动生成试卷，支持单选、多选、判断、填空等题型
+- **自动批改**：客观题自动评分，AI 生成答案解析与学习建议
+- **学习笔记**：在阅读 SOP 时随时记录笔记
+
+### 管理模块（管理员）
+- **SOP 管理**：上传、编辑、发布、归档 SOP 文档
+- **部门管理**：管理 SOP 文档分类体系
+- **考试管理**：查看所有考试及成绩统计
+- **考试统计**：通过图表查看考试通过率、分数分布等数据
+- **用户管理**：管理系统用户及其角色权限
+
+### 角色权限
+- **管理员（admin）**：可管理 SOP 文档、查看所有考试数据、管理用户
+- **普通用户（user）**：可浏览 SOP 文档、参加考试、查看个人成绩
+
+## 环境要求
+
+- **Node.js** >= 20
+- **pnpm** >= 9
+- **MySQL** >= 8.0
+
+## 快速开始
+
+```bash
+# 1. 克隆项目
+git clone <项目地址>
+cd sop-answer-question
+
+# 2. 安装依赖
+pnpm install
+
+# 3. 配置环境变量
+cd apps/backend
+cp .env.example .env   # 按需修改数据库连接和 JWT 密钥
+```
+
+### 数据库初始化
+
+```bash
+# 创建数据库
+mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS sop_platform CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+# 配置环境变量（apps/backend/.env）
+DATABASE_URL="mysql://root:your_password@localhost:3306/sop_platform"
+JWT_SECRET="your-jwt-secret"
+
+# 执行迁移建表
+cd apps/backend
+npx prisma db push
+```
+
+### 启动开发服务器
+
+```bash
+# 在项目根目录
+
+# 启动后端（端口 3001）
+pnpm dev:backend
+# 输出：🚀 Backend server running on http://localhost:3001
+# 输出：✅ 超级管理员账号已就绪 (admin / admin)
+# 输出：✅ 普通用户账号已就绪 (user / user, 工号: 800001)
+
+# 启动前端（端口 5173）
+pnpm dev:frontend
+# 输出：➜  Local:   http://localhost:5173/
+
+# 或同时启动前后端
+pnpm dev
+```
+
+### 默认账号
+
+| 角色 | 用户名 | 密码 | 工号 |
+| ---- | ------ | ---- | ---- |
+| 超级管理员 | `admin` | `admin` | `800000` |
+| 普通用户 | `user` | `user` | `800001` |
+
+> 后端启动时自动创建（`auth.service.ts` → `seedAdmin()` / `seedUser()`），首次登录无需修改密码。

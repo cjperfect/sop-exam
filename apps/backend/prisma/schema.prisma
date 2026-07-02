@@ -1,0 +1,191 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 Int      @id @default(autoincrement())
+  username           String   @unique @db.VarChar(50)
+  employeeId         String   @unique @default("") @map("employee_id") @db.VarChar(50)
+  department         String   @default("") @db.VarChar(100)
+  password           String   @db.VarChar(255)
+  mustChangePassword Boolean  @default(true) @map("must_change_password")
+  status             String   @default("active") @db.VarChar(20)
+  role               String   @default("user") @db.VarChar(20)
+  isDeleted          Boolean  @default(false) @map("is_delete")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  submissions Submission[]
+
+  @@map("users")
+}
+
+model Department {
+  id          Int      @id @default(autoincrement())
+  name        String   @default("") @db.VarChar(100)
+  description String   @default("") @db.VarChar(255)
+  isDeleted   Boolean  @default(false) @map("is_delete")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("departments")
+}
+
+model SopDocument {
+  id             Int      @id @default(autoincrement())
+  title          String   @db.VarChar(255)
+  content        String   @db.Text
+  department     String   @default("") @db.VarChar(50)
+  uploadedBy     String   @default("") @map("uploaded_by") @db.VarChar(100)
+  uploadedByName String   @default("") @map("uploaded_by_name") @db.VarChar(100)
+  fileType       String   @default("markdown") @map("file_type") @db.VarChar(20)
+  status         String   @default("draft") @db.VarChar(20)
+  viewCount      Int      @default(0) @map("view_count")
+  isDeleted      Boolean  @default(false) @map("is_delete")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  notes Note[]
+  exams Exam[]
+
+  @@map("sop_documents")
+}
+
+// 1. 试卷表
+model Exam {
+  id             Int      @id @default(autoincrement())
+  sopId          Int      @map("sop_id")
+  configId       Int      @map("config_id")
+  title          String   @db.VarChar(255)
+  description    String   @db.Text
+  status         String   @default("draft") @db.VarChar(20)
+  totalQuestions Int      @default(0) @map("total_questions")
+  totalScore     Int      @default(0) @map("total_score")
+  createdBy      String   @default("") @map("created_by") @db.VarChar(100)
+  isDeleted      Boolean  @default(false) @map("is_delete")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  sop         SopDocument  @relation(fields: [sopId], references: [id], onDelete: Cascade)
+  config      ExamConfig   @relation(fields: [configId], references: [id])
+  questions   Question[]
+  submissions Submission[]
+
+  @@index([sopId])
+  @@index([configId])
+  @@index([status])
+  @@index([isDeleted])
+  @@map("exams")
+}
+
+// 2. 题库表
+model Question {
+  id          Int      @id @default(autoincrement())
+  examId      Int      @map("exam_id")
+  type        String   @db.VarChar(20)
+  content     String   @db.Text
+  options     Json?
+  answer      String   @db.VarChar(500)
+  explanation String?  @db.Text
+  score       Int      @default(0)
+  sortOrder   Int      @default(0) @map("sort_order")
+  sopSource   String?  @map("sop_source") @db.VarChar(500)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  exam           Exam            @relation(fields: [examId], references: [id], onDelete: Cascade)
+  answerDetails  AnswerDetail[]
+
+  @@index([examId])
+  @@index([type])
+  @@map("questions")
+}
+
+// 3. 考试记录表
+model Submission {
+  id            Int       @id @default(autoincrement())
+  examId        Int       @map("exam_id")
+  sopId         Int       @map("sop_id")
+  userId        Int       @map("user_id")
+  userName      String    @default("") @map("user_name") @db.VarChar(100)
+  startedAt     DateTime  @map("started_at")
+  submittedAt   DateTime? @map("submitted_at")
+  timeSpent     Int       @default(0) @map("time_spent")
+  totalScore    Int       @default(0) @map("total_score")
+  totalMaxScore Int       @default(0) @map("total_max_score")
+  isPassed      Boolean   @default(false) @map("is_passed")
+  suggestions   String?   @db.Text
+  isDeleted     Boolean   @default(false) @map("is_delete")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  exam          Exam            @relation(fields: [examId], references: [id], onDelete: Cascade)
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answerDetails AnswerDetail[]
+
+  @@index([examId])
+  @@index([userId])
+  @@index([sopId])
+  @@index([isPassed])
+  @@index([isDeleted])
+  @@map("submissions")
+}
+
+// 4. 答题详情表
+model AnswerDetail {
+  id            Int      @id @default(autoincrement())
+  submissionId  Int      @map("submission_id")
+  questionId    Int      @map("question_id")
+  examId        Int      @map("exam_id")
+  userAnswer    String?  @map("user_answer") @db.VarChar(500)
+  correctAnswer String?  @map("correct_answer") @db.VarChar(500)
+  isCorrect     Boolean  @default(false) @map("is_correct")
+  aiScore       Int      @default(0) @map("ai_score")
+  aiFeedback    String?  @map("ai_feedback") @db.Text
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  question   Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([submissionId])
+  @@index([questionId])
+  @@index([examId])
+  @@map("answer_details")
+}
+
+// 5. 考试配置表
+model ExamConfig {
+  id            Int      @id @default(autoincrement())
+  passingScore  Int      @default(60) @map("passing_score")
+  totalScore    Int      @default(100) @map("total_score")
+  timeLimit     Int      @default(30) @map("time_limit")
+  questionCount Int      @default(10) @map("question_count")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  exams Exam[]
+
+  @@map("exam_config")
+}
+
+model Note {
+  id        Int      @id @default(autoincrement())
+  sopId     Int      @map("sop_id")
+  sopTitle  String   @map("sop_title") @db.VarChar(255)
+  userId    Int      @map("user_id")
+  userName  String   @default("") @map("user_name") @db.VarChar(100)
+  content   String   @db.Text
+  pageRef   String?  @map("page_ref") @db.VarChar(255)
+  isDeleted Boolean  @default(false) @map("is_delete")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  sop SopDocument @relation(fields: [sopId], references: [id], onDelete: Cascade)
+
+  @@map("notes")
+}

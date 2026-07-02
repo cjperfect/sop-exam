@@ -1,0 +1,28 @@
+{
+  "name": "sop-platform",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --parallel -r run dev",
+    "dev:frontend": "pnpm --filter @sop/frontend dev",
+    "dev:backend": "pnpm --filter @sop/backend dev",
+    "build": "pnpm -r run build",
+    "build:frontend": "pnpm --filter @sop/frontend build",
+    "build:backend": "pnpm --filter @sop/backend build",
+    "lint": "pnpm -r run lint",
+    "test": "pnpm -r run test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@trivago/prettier-plugin-sort-imports": "^6.0.2",
+    "prettier": "^3.8.3",
+    "prettier-plugin-tailwindcss": "^0.7.2",
+    "typescript": "~6.0.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
