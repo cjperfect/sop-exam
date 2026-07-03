@@ -37,8 +37,6 @@ export function SopListTable({ sops }: SopListTableProps) {
           <TableHead>标题</TableHead>
           <TableHead>分类</TableHead>
           <TableHead>状态</TableHead>
-          <TableHead>浏览</TableHead>
-          <TableHead>上传者</TableHead>
           <TableHead className='text-right'>更新时间</TableHead>
         </TableRow>
       </TableHeader>
@@ -65,14 +63,8 @@ export function SopListTable({ sops }: SopListTableProps) {
                   {SOP_STATUS_LABELS[sop.status]}
                 </Badge>
               </TableCell>
-              <TableCell className='text-muted-foreground'>
-                {sop.viewCount}
-              </TableCell>
-              <TableCell className='text-muted-foreground'>
-                {sop.uploadedByName}
-              </TableCell>
               <TableCell className='text-right text-muted-foreground'>
-                {new Date(sop.updatedAt).toLocaleDateString('zh-CN')}
+                {new Date(sop.updatedAt).toLocaleString('zh-CN')}
               </TableCell>
             </TableRow>
           )

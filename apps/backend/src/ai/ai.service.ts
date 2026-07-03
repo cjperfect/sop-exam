@@ -16,7 +16,7 @@ export class AiService {
     @Inject(DEEPSEEK_SERVICE) private readonly deepseek: OpenAI | null,
   ) {}
 
-  /** 生成试卷 */
+  /** 生成试卷 — 并行分批调用 DeepSeek，提升速度 */
   async generateExam(dto: GenerateExamDto): Promise<GeneratedExam> {
     const { sopContent, sopTitle, questionCount = 10 } = dto
 
@@ -25,55 +25,99 @@ export class AiService {
       return mockGenerateExam(sopContent, sopTitle, questionCount)
     }
 
-    try {
-      const { systemPrompt, userPrompt } = buildGenerateExamPrompt(
-        sopTitle,
-        sopContent,
-        questionCount,
-      )
+    const BATCH_SIZE = 3
+    const batchTotal = Math.ceil(questionCount / BATCH_SIZE)
+    const batches = Array.from({ length: batchTotal }, (_, i) => {
+      const remaining = questionCount - i * BATCH_SIZE
+      return Math.min(BATCH_SIZE, remaining)
+    })
 
-      const response = await this.deepseek.chat.completions.create({
-        model: 'deepseek-chat',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        temperature: 0.7,
-        max_tokens: 4096,
-      })
+    // 并行调用所有批次
+    const batchResults = await Promise.allSettled(
+      batches.map((count, i) =>
+        this.generateBatch(sopTitle, sopContent, count, i, batchTotal),
+      ),
+    )
 
-      const raw = response.choices[0]?.message?.content?.trim() ?? ''
-      const parsed = this.parseJsonResponse<GeneratedExam>(raw)
-
-      console.log('raw',raw)
-      // 校验返回结果
-      if (!parsed.questions?.length) {
-        throw new Error('AI response has no questions')
+    // 合并结果
+    const allQuestions: GeneratedExam['questions'] = []
+    for (const result of batchResults) {
+      if (result.status === 'fulfilled') {
+        allQuestions.push(...result.value.questions)
       }
+    }
 
-      // 补充默认值 & 修正 sortOrder
-      parsed.questions = parsed.questions.map((q, i) => ({
-        type: q.type,
-        content: q.content,
-        options: q.options ?? [],
-        answer: q.answer ?? '',
-        explanation: q.explanation ?? '',
-        score: q.score ?? 10,
-        sortOrder: i + 1,
-        sopSource: q.sopSource ?? '',
-      }))
+    // 重新编号 sortOrder
+    allQuestions.forEach((q, i) => { q.sortOrder = i + 1 })
 
-      if (!parsed.title) parsed.title = `${sopTitle} — 知识考核`
-      if (!parsed.description) parsed.description = `基于《${sopTitle}》自动生成的 ${questionCount} 道考题`
-      if (!parsed.timeLimit) parsed.timeLimit = Math.ceil(questionCount * 1.5)
-      if (!parsed.passingScore) parsed.passingScore = 60
-
-      this.logger.log(`Generated ${parsed.questions.length} questions via DeepSeek`)
-      return parsed
-    } catch (err) {
-      this.logger.warn(`DeepSeek generation failed, falling back to mock: ${(err as Error).message}`)
+    if (allQuestions.length === 0) {
+      this.logger.warn('All batches failed, falling back to mock')
       return mockGenerateExam(sopContent, sopTitle, questionCount)
     }
+
+    const parsed: GeneratedExam = {
+      title: `${sopTitle} — 知识考核`,
+      description: `基于《${sopTitle}》自动生成的 ${allQuestions.length} 道考题`,
+      questions: allQuestions,
+      timeLimit: Math.ceil(questionCount * 1.5),
+      passingScore: 60,
+    }
+
+    this.logger.log(`Generated ${allQuestions.length} questions via DeepSeek (${batchTotal} batches)`)
+    return parsed
+  }
+
+  /** 单批次题目生成 */
+  private async generateBatch(
+    sopTitle: string,
+    sopContent: string,
+    count: number,
+    batchIndex: number,
+    batchTotal: number,
+  ): Promise<GeneratedExam> {
+    const { systemPrompt, userPrompt } = buildGenerateExamPrompt(
+      sopTitle,
+      sopContent,
+      count,
+      batchIndex,
+      batchTotal,
+    )
+
+    const response = await this.deepseek!.chat.completions.create({
+      model: 'deepseek-chat',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      temperature: 0.7,
+      max_tokens: 2048,
+    })
+
+    const raw = response.choices[0]?.message?.content?.trim() ?? ''
+    const parsed = this.parseJsonResponse<GeneratedExam>(raw)
+
+    if (!parsed.questions?.length) {
+      throw new Error(`Batch ${batchIndex + 1}: AI response has no questions`)
+    }
+
+    // 补充默认值
+    parsed.questions = parsed.questions.map((q, i) => ({
+      type: q.type,
+      content: q.content,
+      options: q.options ?? [],
+      answer: q.answer ?? '',
+      explanation: q.explanation ?? '',
+      score: q.score ?? 10,
+      sortOrder: batchIndex * 3 + i + 1,
+      sopSource: q.sopSource ?? '',
+    }))
+
+    if (!parsed.title) parsed.title = `${sopTitle} — 知识考核`
+    if (!parsed.description) parsed.description = `基于《${sopTitle}》自动生成的考题`
+    if (!parsed.timeLimit) parsed.timeLimit = Math.ceil(count * 1.5)
+    if (!parsed.passingScore) parsed.passingScore = 60
+
+    return parsed
   }
 
   /** 批改试卷并生成学习建议 */

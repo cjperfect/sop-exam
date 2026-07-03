@@ -91,7 +91,7 @@ export function AdminExams() {
               <h2 className='text-2xl font-bold tracking-tight'>考试记录</h2>
               <p className='text-muted-foreground'>查看所有考试记录</p>
             </div>
-            <Button variant='outline' size='sm' onClick={() => setConfigOpen(true)}>
+            <Button variant='outline' size='sm' className='border-blue-500 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800' onClick={() => setConfigOpen(true)}>
               <Settings className='mr-1 h-4 w-4' />
               考试配置
             </Button>

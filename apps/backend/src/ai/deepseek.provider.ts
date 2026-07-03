@@ -13,8 +13,8 @@ export const DeepSeekProvider: Provider = {
     return new OpenAI({
       apiKey: apiKey || 'dummy-key',
       baseURL: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1',
-      timeout: 60_000,
-      maxRetries: 2,
+      timeout: 30_000,
+      maxRetries: 1,
     })
   },
 }

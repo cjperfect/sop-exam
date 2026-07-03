@@ -2,7 +2,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { Link } from '@tanstack/react-router'
-import { Eye, FileText } from 'lucide-react'
+import { FileText } from 'lucide-react'
 import { SOP_STATUS_LABELS } from '@sop/shared'
 import type { SopDocument } from '@sop/shared'
 
@@ -49,15 +49,7 @@ export function SopListCards({ sops }: SopListCardsProps) {
                   {sop.title}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className='flex items-center gap-4 text-xs text-muted-foreground'>
-                  <span className='flex items-center gap-1'>
-                    <Eye size={14} />
-                    {sop.viewCount} 次浏览
-                  </span>
-                  <span>{sop.uploadedByName}</span>
-                </div>
-              </CardContent>
+              <CardContent />
             </Card>
           </Link>
         )
