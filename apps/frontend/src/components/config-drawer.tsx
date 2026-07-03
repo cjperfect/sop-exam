@@ -28,55 +28,7 @@ import {
 import { useSidebar } from './ui/sidebar'
 
 export function ConfigDrawer() {
-  const { setOpen } = useSidebar()
-  const { resetDir } = useDirection()
-  const { resetTheme } = useTheme()
-  const { resetLayout } = useLayout()
-
-  const handleReset = () => {
-    setOpen(true)
-    resetDir()
-    resetTheme()
-    resetLayout()
-  }
-
-  return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button
-          size='icon'
-          variant='ghost'
-          aria-label='打开主题设置'
-          className='rounded-full'
-        >
-          <Settings aria-hidden='true' />
-        </Button>
-      </SheetTrigger>
-      <SheetContent className='flex flex-col'>
-        <SheetHeader className='pb-0 text-start'>
-          <SheetTitle>主题设置</SheetTitle>
-          <SheetDescription>
-            根据你的偏好调整外观和布局。
-          </SheetDescription>
-        </SheetHeader>
-        <div className='space-y-6 overflow-y-auto px-4'>
-          <ThemeConfig />
-          <SidebarConfig />
-          <LayoutConfig />
-          <DirConfig />
-        </div>
-        <SheetFooter className='gap-2'>
-          <Button
-            variant='destructive'
-            onClick={handleReset}
-            aria-label='重置所有设置为默认值'
-          >
-            重置
-          </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
-  )
+  return null
 }
 
 function SectionTitle({
