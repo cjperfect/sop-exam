@@ -1,53 +1,14 @@
-import { Injectable, Inject, OnModuleInit, UnauthorizedException } from '@nestjs/common'
+import { Injectable, Inject, UnauthorizedException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import * as bcrypt from 'bcryptjs'
 import { PrismaService } from '../prisma/prisma.service.js'
 
 @Injectable()
-export class AuthService implements OnModuleInit {
+export class AuthService {
   constructor(
     @Inject(JwtService) private readonly jwtService: JwtService,
     @Inject(PrismaService) private readonly prisma: PrismaService,
   ) {}
-
-  async onModuleInit() {
-    await this.seedAdmin()
-    await this.seedUser()
-  }
-
-  private async seedAdmin() {
-    const hashedPassword = bcrypt.hashSync('admin', 10)
-    await this.prisma.user.upsert({
-      where: { username: 'admin' },
-      update: { password: hashedPassword, mustChangePassword: false, role: 'super_admin' },
-      create: {
-        username: 'admin',
-        employeeId: '800000',
-        password: hashedPassword,
-        status: 'active',
-        role: 'super_admin',
-        mustChangePassword: false,
-      },
-    })
-    console.log('✅ 超级管理员账号已就绪 (admin / admin)')
-  }
-
-  private async seedUser() {
-    const hashedPassword = bcrypt.hashSync('user', 10)
-    await this.prisma.user.upsert({
-      where: { username: 'user' },
-      update: {},
-      create: {
-        username: 'user',
-        employeeId: '800001',
-        password: hashedPassword,
-        status: 'active',
-        role: 'user',
-        mustChangePassword: false,
-      },
-    })
-    console.log('✅ 普通用户账号已就绪 (user / user, 工号: 800001)')
-  }
 
   async login(username: string, password: string) {
     const user = await this.prisma.user.findUnique({ where: { username } })

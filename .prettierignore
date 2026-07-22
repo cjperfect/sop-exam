@@ -3,6 +3,8 @@
 
 # Except these files & folders
 !/src
+!/apps
+!/packages
 !index.html
 !package.json
 !tailwind.config.js
@@ -17,3 +19,11 @@
 
 # Ignore auto generated routeTree.gen.ts
 /src/routeTree.gen.ts
+
+# Monorepo: ignore node_modules, dist, and generated files
+/apps/**/node_modules/
+/apps/**/dist/
+/apps/**/build/
+/packages/**/node_modules/
+/packages/**/dist/
+/packages/**/build/

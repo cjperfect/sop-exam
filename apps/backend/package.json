@@ -6,6 +6,9 @@
   "scripts": {
     "dev": "tsx watch src/main.ts",
     "build": "tsc",
+    "db:migrate": "npx prisma migrate dev",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:generate": "npx prisma generate",
     "start": "node dist/main",
     "start:prod": "node dist/main",
     "lint": "tsc --noEmit"
@@ -17,7 +20,8 @@
     "@nestjs/passport": "^11.0.0",
     "@nestjs/platform-express": "^11.0.0",
     "@nestjs/swagger": "^11.0.0",
-    "@prisma/client": "^6.19.3",
+    "@prisma/adapter-mariadb": "^7.9.0",
+    "@prisma/client": "^7.9.0",
     "@sop/shared": "workspace:*",
     "bcryptjs": "^3.0.2",
     "cookie-parser": "^1.4.7",
@@ -35,7 +39,7 @@
     "@types/cookie-parser": "^1.4.8",
     "@types/express": "^5.0.0",
     "@types/passport-jwt": "^4.0.1",
-    "prisma": "^6.19.3",
+    "prisma": "^7.9.0",
     "tsx": "^4.22.4"
   },
   "nest": {

@@ -1,4 +1,13 @@
-import { Controller, Post, Body, UseGuards, Get, Req, Inject, UnauthorizedException } from '@nestjs/common'
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Get,
+  Req,
+  Inject,
+  UnauthorizedException,
+} from '@nestjs/common'
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger'
 import { AuthService } from './auth.service.js'
 import { LoginDto, RegisterDto } from './auth.dto.js'
@@ -33,8 +42,15 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: '修改密码' })
-  changePassword(@Req() req: any, @Body() body: { oldPassword: string; newPassword: string }) {
-    return this.authService.changePassword(req.user.id, body.oldPassword, body.newPassword)
+  changePassword(
+    @Req() req: any,
+    @Body() body: { oldPassword: string; newPassword: string }
+  ) {
+    return this.authService.changePassword(
+      req.user.id,
+      body.oldPassword,
+      body.newPassword
+    )
   }
 
   @Post('reset-password')
@@ -49,7 +65,10 @@ export class AuthController {
     // 普通管理员不能重置超级管理员或同级别管理员的密码
     if (currentRole === 'admin') {
       const targetUser = await this.authService.getUserById(body.userId)
-      if (targetUser && (targetUser.role === 'super_admin' || targetUser.role === 'admin')) {
+      if (
+        targetUser &&
+        (targetUser.role === 'super_admin' || targetUser.role === 'admin')
+      ) {
         throw new UnauthorizedException('无权重置该用户的密码')
       }
     }
