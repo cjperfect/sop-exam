@@ -67,6 +67,7 @@ model Exam {
   totalQuestions Int      @default(0) @map("total_questions")
   totalScore     Int      @default(0) @map("total_score")
   createdBy      String   @default("") @map("created_by") @db.VarChar(100)
+  aiAnalysis     String?  @map("ai_analysis") @db.Text
   isDeleted      Boolean  @default(false) @map("is_delete")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")

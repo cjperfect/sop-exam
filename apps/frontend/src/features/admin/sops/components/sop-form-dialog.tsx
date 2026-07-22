@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
+import { RichTextEditor } from '@/components/ui/rich-text-editor'
 import {
   Select,
   SelectContent,
@@ -30,11 +30,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { SOP_DEPARTMENTS } from '@sop/shared'
 import type { SopDocument } from '@sop/shared'
-import { createSop, updateSop } from '@/features/sops/api'
-import { FileText, Send, Maximize2, Minimize2, X } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { createSop, updateSop, fetchSops } from '@/features/sops/api'
+import { FileText, Send, X } from 'lucide-react'
+
+
+const STORAGE_KEY = "sop-form-draft";
+
+function loadDraft(): SopFormValues | null {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveDraft(values: SopFormValues) {
+  try {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(values));
+  } catch { /* quota exceeded, ignore */ }
+}
+
+function clearDraft() {
+  sessionStorage.removeItem(STORAGE_KEY);
+}
 
 const formSchema = z.object({
   title: z.string().min(1, '请输入 SOP 标题。'),
@@ -53,15 +73,23 @@ interface SopFormDialogProps {
 
 export function SopFormDialog({ open, onOpenChange, sop }: SopFormDialogProps) {
   const isEdit = !!sop
-  const [fullscreen, setFullscreen] = useState(false)
   const queryClient = useQueryClient()
+
+  const { data: departments = [] } = useQuery({
+    queryKey: ["sops-departments"],
+    queryFn: async () => {
+      const res = await fetchSops({ page: 1, pageSize: 100 });
+      return [...new Set(res.items.map((s) => s.department))].sort();
+    },
+    staleTime: 5 * 60 * 1000,
+  })
 
   const form = useForm<SopFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: { title: '', department: '', content: '' },
   })
 
-  // 编辑模式：预填数据
+  // 编辑模式：预填数据 / 新建模式：恢复草稿
   useEffect(() => {
     if (sop) {
       form.reset({
@@ -69,10 +97,24 @@ export function SopFormDialog({ open, onOpenChange, sop }: SopFormDialogProps) {
         department: sop.department,
         content: sop.content,
       })
+    } else if (open) {
+      const draft = loadDraft()
+      form.reset(draft ?? { title: '', department: '', content: '' })
     } else {
       form.reset({ title: '', department: '', content: '' })
     }
-  }, [sop, form])
+  }, [sop, open, form])
+
+  // 表单数据变化时自动保存草稿
+  useEffect(() => {
+    if (isEdit || !open) return
+    const sub = form.watch((values) => {
+      if (values.title || values.department || values.content) {
+        saveDraft(values as SopFormValues)
+      }
+    })
+    return () => sub.unsubscribe()
+  }, [isEdit, open, form])
 
   // 创建
   const createMutation = useMutation({
@@ -80,9 +122,9 @@ export function SopFormDialog({ open, onOpenChange, sop }: SopFormDialogProps) {
       createSop(input as Partial<SopDocument>),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sops'] })
-      toast.success('SOP 已上传')
+      toast.success('SOP 已添加')
+      clearDraft()
       form.reset()
-      setFullscreen(false)
       onOpenChange(false)
     },
   })
@@ -94,7 +136,7 @@ export function SopFormDialog({ open, onOpenChange, sop }: SopFormDialogProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sops'] })
       toast.success('SOP 已更新')
-      setFullscreen(false)
+      clearDraft()
       onOpenChange(false)
     },
   })
@@ -116,27 +158,21 @@ export function SopFormDialog({ open, onOpenChange, sop }: SopFormDialogProps) {
   const isPending = createMutation.isPending || updateMutation.isPending
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) setFullscreen(false); onOpenChange(o) }}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className={cn(
-          'flex flex-col transition-all duration-200',
-          fullscreen ? 'sm:max-w-[96vw] h-[96vh]' : 'sm:max-w-xl max-h-[80vh]',
-        )}
+        className='flex flex-col sm:max-w-[96vw] h-[96vh]'
       >
         {/* Header */}
         <DialogHeader>
           <div className='flex items-start justify-between gap-2'>
             <div>
-              <DialogTitle>{isEdit ? '编辑 SOP' : '上传 SOP'}</DialogTitle>
+              <DialogTitle>{isEdit ? '编辑 SOP' : '添加 SOP'}</DialogTitle>
               <DialogDescription>
-                {isEdit ? '修改 SOP 文档内容。' : '上传新的 SOP 文档。'}
+                {isEdit ? '修改 SOP 文档内容。' : '添加新的 SOP 文档。'}
               </DialogDescription>
             </div>
             <div className='flex shrink-0 items-center gap-1'>
-              <Button variant='ghost' size='icon' className='size-8' onClick={() => setFullscreen((f) => !f)}>
-                {fullscreen ? <Minimize2 className='size-4' /> : <Maximize2 className='size-4' />}
-              </Button>
               <Button variant='ghost' size='icon' className='size-8' onClick={() => onOpenChange(false)}>
                 <X className='size-4' />
               </Button>
@@ -167,7 +203,7 @@ export function SopFormDialog({ open, onOpenChange, sop }: SopFormDialogProps) {
                       <SelectTrigger><SelectValue placeholder='选择部门' /></SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {SOP_DEPARTMENTS.map((d) => (
+                      {departments.map((d) => (
                         <SelectItem key={d} value={d}>{d}</SelectItem>
                       ))}
                     </SelectContent>
@@ -178,13 +214,17 @@ export function SopFormDialog({ open, onOpenChange, sop }: SopFormDialogProps) {
             </div>
             <FormField control={form.control} name='content' render={({ field }) => (
               <FormItem className='flex flex-1 min-h-0 flex-col'>
-                <FormLabel required className='shrink-0'>正文 (Markdown)</FormLabel>
+                <FormLabel required className='shrink-0'>正文</FormLabel>
                 <FormControl>
-                  <Textarea
-                    className='flex-1 min-h-[200px] resize-none'
-                    placeholder='在此输入 Markdown 内容...'
-                    {...field}
-                  />
+                  <div className='flex-1 min-h-0'>
+                    <RichTextEditor
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder='在此编辑 SOP 正文内容...'
+                      className='h-full'
+                      minHeight='400px'
+                    />
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>

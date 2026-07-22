@@ -5,12 +5,12 @@ import { PrismaService } from '../prisma/prisma.service.js'
 export class SopsService {
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
-  async findAll(page = 1, pageSize = 10, search?: string, department?: string, status?: string) {
+  async findAll(page = 1, pageSize = 10, search?: string, user?: { role?: string }) {
     const skip = (page - 1) * pageSize
     const where: Record<string, unknown> = { isDeleted: false }
     if (search) where.title = { contains: search }
-    if (department) where.department = department
-    if (status) where.status = status
+    // 管理员看全部，普通用户只看已发布
+    if (!user || user.role !== 'admin') where.status = 'published'
     const [items, total] = await Promise.all([
       this.prisma.sopDocument.findMany({ where: where as any, orderBy: { updatedAt: 'desc' }, skip, take: pageSize }),
       this.prisma.sopDocument.count({ where: where as any }),

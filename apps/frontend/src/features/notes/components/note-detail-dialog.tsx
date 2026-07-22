@@ -67,9 +67,10 @@ export function NoteDetailDialog({ noteId, onOpenChange }: NoteDetailDialogProps
             )}
             <div>
               <p className='text-xs text-muted-foreground mb-1'>内容</p>
-              <div className='rounded-lg border bg-muted/30 p-4 text-sm whitespace-pre-wrap'>
-                {displayNote.content}
-              </div>
+              <div
+                className='rounded-lg border bg-muted/30 p-4 text-sm prose prose-sm dark:prose-invert max-w-none'
+                dangerouslySetInnerHTML={{ __html: displayNote.content.startsWith('<') ? displayNote.content : displayNote.content.replace(/\n/g, '<br/>') }}
+              />
             </div>
             <div className='flex items-center gap-4 text-xs text-muted-foreground'>
               <span className='flex items-center gap-1'>

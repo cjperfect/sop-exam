@@ -78,9 +78,13 @@ export function SopReader({ sop, onStartExam }: SopReaderProps) {
         {sop.status === 'draft' && <span className='text-sm text-muted-foreground'>草稿</span>}
       </div>
 
-      {/* Markdown 正文 */}
-      <article className='prose prose-gray dark:prose-invert max-w-none prose-headings:mb-1 prose-headings:mt-4 prose-p:my-0.5 prose-li:my-0 prose-li:py-0 prose-ul:my-0.5 prose-ol:my-0.5 prose-table:border-collapse prose-table:w-full prose-table:my-1.5 prose-td:border prose-td:border-border prose-td:p-1.5 prose-th:border prose-th:border-border prose-th:p-1.5 prose-th:bg-muted prose-code:rounded prose-code:bg-muted prose-code:px-1 prose-code:py-0 prose-code:text-xs prose-pre:bg-muted prose-pre:text-foreground prose-pre:my-1.5 prose-pre:p-3 prose-blockquote:my-1.5 prose-blockquote:py-0.5 prose-hr:my-3 prose-h2:mt-5 prose-h2:mb-1.5 prose-h3:mt-4 prose-h3:mb-1'>
-        <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>{sop.content}</Markdown>
+      {/* 正文 */}
+      <article className='prose prose-gray dark:prose-invert max-w-none prose-headings:mb-1 prose-headings:mt-4 prose-p:my-0.5 prose-li:my-0 prose-li:py-0 prose-ul:my-0.5 prose-ol:my-0.5 prose-table:border-collapse prose-table:w-full prose-table:my-1.5 prose-td:border prose-td:border-border prose-td:p-1.5 prose-th:border prose-th:border-border prose-th:p-1.5 prose-th:bg-muted prose-code:rounded prose-code:bg-muted prose-code:px-1 prose-code:py-0 prose-code:text-xs prose-pre:bg-muted prose-pre:text-foreground prose-pre:my-1.5 prose-pre:p-3 prose-blockquote:my-1.5 prose-blockquote:py-0.5 prose-hr:my-3 prose-h2:mt-5 prose-h2:mb-1.5 prose-h3:mt-4 prose-h3:mb-1 prose-img:rounded-lg'>
+        {sop.content.startsWith('<') ? (
+          <div dangerouslySetInnerHTML={{ __html: sop.content }} />
+        ) : (
+          <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>{sop.content}</Markdown>
+        )}
       </article>
     </div>
   )

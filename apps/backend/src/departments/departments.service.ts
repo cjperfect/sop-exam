@@ -2,12 +2,14 @@ import { Injectable, Inject, NotFoundException, OnModuleInit } from '@nestjs/com
 import { PrismaService } from '../prisma/prisma.service.js'
 
 const SEED_DEPARTMENTS = [
+  { name: 'AI与软件', description: 'AI与软件部门' },
   { name: '产品中心', description: '产品中心' },
-  { name: 'GTM部门', description: 'GTM部门' },
-  { name: 'ID部门', description: 'ID部门' },
-  { name: '研发支持部门', description: '研发支持部门' },
-  { name: '电子部门', description: '电子部门' },
-  { name: '嵌入式部门', description: '嵌入式部门' },
+  { name: 'GTM', description: 'GTM部门' },
+  { name: 'DQA', description: 'DQA部门' },
+  { name: '结构部', description: '结构部' },
+  { name: 'ID', description: 'ID部门' },
+  { name: '嵌入式', description: '嵌入式部门' },
+  { name: '电子部', description: '电子部门' },
 ]
 
 @Injectable()

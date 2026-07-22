@@ -3,7 +3,6 @@ import type { SopDocument } from '@sop/shared'
 
 export interface SopListParams {
   search?: string
-  department?: string
 }
 
 export interface PaginatedResult<T> {
@@ -35,6 +34,12 @@ export async function createSop(input: Partial<SopDocument>) {
 export async function updateSop(id: string, input: Partial<SopDocument>) {
   const { data } = await api.put<SopDocument>(`/api/sops/${id}`, input)
   return data
+}
+
+/** 获取部门列表 */
+export async function fetchDepartments() {
+  const { data } = await api.get<Array<{ id: number; name: string; description: string }>>('/api/departments')
+  return data.map((d) => d.name)
 }
 
 /** 删除 SOP */

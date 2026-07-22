@@ -18,7 +18,7 @@ export function Dashboard() {
 
   const { data: monthlyStats } = useQuery({
     queryKey: ["dashboard", "monthly"],
-    queryFn: () => fetchMonthlyStats(6),
+    queryFn: fetchMonthlyStats,
   });
 
   const { data: activities } = useQuery({
@@ -56,9 +56,6 @@ export function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{stats?.totalSops ?? 0}</div>
-                  <p className="text-xs text-muted-foreground">
-                    其中已发布 {stats?.publishedSops ?? 0} 篇 · 累计浏览 {(stats?.totalViews ?? 0).toLocaleString()} 次
-                  </p>
                 </CardContent>
               </Card>
               <Card>
@@ -68,7 +65,6 @@ export function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{stats?.totalExams ?? 0}</div>
-                  <p className="text-xs text-muted-foreground">本月新增 {stats?.monthlyExams ?? 0} 次</p>
                 </CardContent>
               </Card>
               <Card>
@@ -78,7 +74,6 @@ export function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{stats?.totalUsers ?? 0}</div>
-                  <p className="text-xs text-muted-foreground">活跃用户 {stats?.activeUsers ?? 0} 人</p>
                 </CardContent>
               </Card>
               <Card>
@@ -88,7 +83,6 @@ export function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{stats?.avgPassRate ?? 0}%</div>
-                  <p className="text-xs text-muted-foreground">较上月提升 3%</p>
                 </CardContent>
               </Card>
             </div>

@@ -84,7 +84,7 @@ export function InlineExam({ sop, onBack }: InlineExamProps) {
       cancelled = true;
       abortController.abort();
     };
-  }, [sop]);
+  }, [sop, onBack]);
 
   const handleAnswerChange = useCallback(
     (value: string | string[]) => {

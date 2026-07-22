@@ -39,6 +39,7 @@ export class ExamsService {
       createdBy: item.createdBy,
       questionCount: item._count.questions,
       attemptCount: item._count.submissions,
+      aiAnalysis: item.aiAnalysis,
       createdAt: item.createdAt,
       updatedAt: item.updatedAt,
     }))
@@ -75,6 +76,7 @@ export class ExamsService {
       passingScore: exam.config?.passingScore ?? 60,
       timeLimit: exam.config?.timeLimit ?? 30,
       createdBy: exam.createdBy,
+      aiAnalysis: exam.aiAnalysis,
       createdAt: exam.createdAt,
       updatedAt: exam.updatedAt,
       attemptCount: exam._count.submissions,
@@ -152,6 +154,15 @@ export class ExamsService {
 
   async submit(_id: number, _answers: unknown[]) {
     return { message: 'not implemented yet' }
+  }
+
+  async updateAiAnalysis(id: number, aiAnalysis: string) {
+    const existing = await this.prisma.exam.findUnique({ where: { id, isDeleted: false } })
+    if (!existing) throw new NotFoundException('考试不存在')
+    return this.prisma.exam.update({
+      where: { id },
+      data: { aiAnalysis },
+    })
   }
 }
 

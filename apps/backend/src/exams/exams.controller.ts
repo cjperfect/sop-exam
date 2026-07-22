@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body, Query, UseGuards, Inject } from '@nestjs/common'
+import { Controller, Get, Post, Patch, Param, Body, Query, UseGuards, Inject } from '@nestjs/common'
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js'
 import { ExamsService } from './exams.service.js'
@@ -33,5 +33,11 @@ export class ExamsController {
   @ApiOperation({ summary: '提交答卷' })
   submit(@Param('id') id: string, @Body() body: { answers: unknown[] }) {
     return this.examsService.submit(Number(id), body.answers)
+  }
+
+  @Patch(':id/ai-analysis')
+  @ApiOperation({ summary: '更新考试 AI 分析' })
+  updateAiAnalysis(@Param('id') id: string, @Body() body: { aiAnalysis: string }) {
+    return this.examsService.updateAiAnalysis(Number(id), body.aiAnalysis)
   }
 }

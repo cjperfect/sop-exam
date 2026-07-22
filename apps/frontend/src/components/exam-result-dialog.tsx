@@ -8,7 +8,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { CheckCircle2, XCircle, BookOpen, Clock, Trophy, ListChecks, Loader2 } from 'lucide-react'
+import { CheckCircle2, XCircle, BookOpen, Lightbulb, Clock, Trophy, ListChecks, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { fetchSubmission } from '@/features/exams/api'
 import type { Submission } from '@sop/shared'
@@ -220,17 +220,17 @@ export function ExamResultDialog({ open, onOpenChange, submissionId, submission:
                   </div>
                 )}
 
-                {!isPreview && q.aiFeedback && (
+                {q.aiFeedback && (
                   <div className='mt-2 flex gap-2 rounded-md bg-muted/50 p-2 text-sm text-muted-foreground'>
                     <BookOpen className='mt-0.5 h-4 w-4 shrink-0' />
                     <span>{q.aiFeedback}</span>
                   </div>
                 )}
 
-                {isPreview && q.explanation && (
+                {q.explanation && (
                   <div className='mt-2 flex gap-2 rounded-md bg-muted/50 p-2 text-sm text-muted-foreground'>
-                    <BookOpen className='mt-0.5 h-4 w-4 shrink-0' />
-                    <span>{q.explanation}</span>
+                    <Lightbulb className='mt-0.5 h-4 w-4 shrink-0' />
+                    <span><span className="font-medium text-foreground">解析：</span>{q.explanation}</span>
                   </div>
                 )}
               </div>

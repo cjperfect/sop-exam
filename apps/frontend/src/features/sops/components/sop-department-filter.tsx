@@ -1,14 +1,15 @@
 import { Button } from '@/components/ui/button'
-import { SOP_DEPARTMENTS } from '@sop/shared'
 
 interface SopDepartmentFilterProps {
   selected: string | undefined
   onSelect: (department: string | undefined) => void
+  departments: string[]
 }
 
 export function SopDepartmentFilter({
   selected,
   onSelect,
+  departments,
 }: SopDepartmentFilterProps) {
   return (
     <div className='flex flex-wrap gap-2'>
@@ -19,7 +20,7 @@ export function SopDepartmentFilter({
       >
         全部部门
       </Button>
-      {SOP_DEPARTMENTS.map((d) => (
+      {departments.map((d) => (
         <Button
           key={d}
           variant={selected === d ? 'default' : 'outline'}

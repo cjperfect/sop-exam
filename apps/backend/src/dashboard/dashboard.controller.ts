@@ -17,9 +17,9 @@ export class DashboardController {
   }
 
   @Get('statistics')
-  @ApiOperation({ summary: '获取月度统计' })
-  getStatistics(@Query('months') months?: string) {
-    return this.dashboardService.getStatistics(Number(months) || 6)
+  @ApiOperation({ summary: '获取月度统计（全年12个月）' })
+  getStatistics() {
+    return this.dashboardService.getStatistics()
   }
 
   @Get('recent-activities')

@@ -80,7 +80,6 @@ export function AdminSops() {
       page,
       pageSize,
       search: searchQuery || undefined,
-      department: deptQuery !== 'all' ? deptQuery : undefined,
     }),
   })
   const sops = sopsRes?.items ?? []
@@ -111,7 +110,7 @@ export function AdminSops() {
           </div>
           <Button onClick={() => setUploadOpen(true)}>
             <Plus className='mr-1 h-4 w-4' />
-            上传 SOP
+            添加 SOP
           </Button>
         </div>
 

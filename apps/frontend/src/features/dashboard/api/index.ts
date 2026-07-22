@@ -2,13 +2,9 @@ import { api } from '@/lib/api'
 
 export interface DashboardStats {
   totalSops: number
-  publishedSops: number
   totalExams: number
-  monthlyExams: number
   totalUsers: number
-  activeUsers: number
   avgPassRate: number
-  totalViews: number
 }
 
 export interface MonthlyStat {
@@ -31,11 +27,9 @@ export async function fetchDashboardStats() {
   return data
 }
 
-/** 获取月度统计 */
-export async function fetchMonthlyStats(months = 6) {
-  const { data } = await api.get<MonthlyStat[]>('/api/dashboard/statistics', {
-    params: { months },
-  })
+/** 获取月度统计（全年12个月） */
+export async function fetchMonthlyStats() {
+  const { data } = await api.get<MonthlyStat[]>('/api/dashboard/statistics')
   return data
 }
 

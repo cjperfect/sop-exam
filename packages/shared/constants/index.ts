@@ -1,10 +1,12 @@
 export const SOP_DEPARTMENTS = [
+  'AI与软件',
   '产品中心',
-  'GTM部门',
-  'ID部门',
-  '研发支持部门',
-  '电子部门',
-  '嵌入式部门',
+  'GTM',
+  'DQA',
+  '结构部',
+  'ID',
+  '嵌入式',
+  '电子部',
 ] as const
 
 export type SopDepartment = (typeof SOP_DEPARTMENTS)[number]

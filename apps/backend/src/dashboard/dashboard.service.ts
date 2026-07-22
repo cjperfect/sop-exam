@@ -6,54 +6,30 @@ export class DashboardService {
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   async getStats() {
-    const [totalSops, publishedSops, totalExams, totalUsers, viewAgg] = await Promise.all([
+    const [totalSops, totalExams, totalUsers, passedSubmissions] = await Promise.all([
       this.prisma.sopDocument.count({ where: { isDeleted: false } }),
-      this.prisma.sopDocument.count({ where: { isDeleted: false, status: 'published' } }),
       this.prisma.submission.count({ where: { isDeleted: false } }),
       this.prisma.user.count({ where: { isDeleted: false } }),
-      this.prisma.sopDocument.aggregate({ where: { isDeleted: false }, _sum: { viewCount: true } }),
+      this.prisma.submission.count({ where: { isDeleted: false, isPassed: true } }),
     ])
 
-    const thisMonth = new Date()
-    thisMonth.setDate(1)
-    thisMonth.setHours(0, 0, 0, 0)
-
-    const monthlyExams = await this.prisma.submission.count({
-      where: { isDeleted: false, createdAt: { gte: thisMonth } },
-    })
-
-    const activeUsers = await this.prisma.user.count({
-      where: { isDeleted: false, status: 'active' },
-    })
-
-    const passedSubmissions = await this.prisma.submission.count({
-      where: { isDeleted: false, isPassed: true },
-    })
     const avgPassRate = totalExams > 0 ? Math.round((passedSubmissions / totalExams) * 100) : 0
 
-    return {
-      totalSops,
-      publishedSops,
-      totalExams,
-      monthlyExams,
-      totalUsers,
-      activeUsers,
-      avgPassRate,
-      totalViews: viewAgg._sum.viewCount ?? 0,
-    }
+    return { totalSops, totalExams, totalUsers, avgPassRate }
   }
 
-  async getStatistics(months: number) {
+  async getStatistics() {
     const names = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
     const now = new Date()
+    const currentMonth = now.getMonth()
     const result = []
-    for (let i = months - 1; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-      const end = new Date(d.getFullYear(), d.getMonth() + 1, 1)
+    for (let i = 0; i <= currentMonth; i++) {
+      const d = new Date(now.getFullYear(), i, 1)
+      const end = new Date(now.getFullYear(), i + 1, 1)
       const total = await this.prisma.submission.count({
         where: { isDeleted: false, createdAt: { gte: d, lt: end } },
       })
-      result.push({ name: names[d.getMonth()], total })
+      result.push({ name: names[i], total })
     }
     return result
   }

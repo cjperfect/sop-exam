@@ -86,3 +86,65 @@
     height: 0;
   }
 }
+
+/* 富文本编辑器代码块亮色语法高亮 */
+.prose pre {
+  background: #f8f9fa;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.prose pre code {
+  color: #24292f;
+  background: none;
+  padding: 0;
+  font-size: 0.875rem;
+}
+
+.dark .prose pre {
+  background: #1e1e2e;
+  border-color: #313244;
+}
+
+.dark .prose pre code {
+  color: #cdd6f4;
+}
+
+/* lowlight 语法高亮颜色 — 亮色主题 */
+.hljs-keyword { color: #cf222e; }
+.hljs-string { color: #0a3069; }
+.hljs-comment { color: #6e7781; font-style: italic; }
+.hljs-function { color: #8250df; }
+.hljs-number { color: #0550ae; }
+.hljs-operator { color: #cf222e; }
+.hljs-punctuation { color: #24292f; }
+.hljs-property { color: #0550ae; }
+.hljs-type { color: #8250df; }
+.hljs-literal { color: #0550ae; }
+.hljs-title { color: #8250df; }
+.hljs-params { color: #24292f; }
+.hljs-selector-class { color: #0550ae; }
+.hljs-selector-tag { color: #116329; }
+.hljs-built_in { color: #cf222e; }
+.hljs-meta { color: #6e7781; }
+.hljs-attr { color: #0550ae; }
+.hljs-attribute { color: #8250df; }
+.hljs-name { color: #116329; }
+.hljs-regexp { color: #0a3069; }
+.hljs-template-variable { color: #cf222e; }
+
+.dark .hljs-keyword { color: #f38ba8; }
+.dark .hljs-string { color: #a6e3a1; }
+.dark .hljs-comment { color: #6c7086; }
+.dark .hljs-function { color: #89b4fa; }
+.dark .hljs-number { color: #fab387; }
+.dark .hljs-operator { color: #f38ba8; }
+.dark .hljs-punctuation { color: #cdd6f4; }
+.dark .hljs-property { color: #89b4fa; }
+.dark .hljs-type { color: #f9e2af; }
+.dark .hljs-literal { color: #fab387; }
+.dark .hljs-title { color: #89b4fa; }
+.dark .hljs-selector-class { color: #fab387; }
+.dark .hljs-selector-tag { color: #a6e3a1; }
+.dark .hljs-built_in { color: #f38ba8; }

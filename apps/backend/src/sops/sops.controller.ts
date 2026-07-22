@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards, Inject } from '@nestjs/common'
+import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards, Inject, Req } from '@nestjs/common'
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js'
 import { SopsService } from './sops.service.js'
 import { CreateSopDto, UpdateSopDto } from './dto/sops.dto.js'
+import type { Request } from 'express'
 
 @ApiTags('SOP 文档')
 @ApiBearerAuth()
@@ -14,13 +15,13 @@ export class SopsController {
   @Get()
   @ApiOperation({ summary: '获取 SOP 列表' })
   findAll(
-    @Query('page') page?: string,
-    @Query('pageSize') pageSize?: string,
+    @Query('page') page?: number,
+    @Query('pageSize') pageSize?: number,
     @Query('search') search?: string,
-    @Query('department') department?: string,
-    @Query('status') status?: string,
+    @Req() req?: Request
   ) {
-    return this.sopsService.findAll(Number(page) || 1, Number(pageSize) || 10, search, department, status)
+    const user = req?.user as { role?: string } | undefined
+    return this.sopsService.findAll(Number(page) || 1, Number(pageSize) || 10, search, user)
   }
 
   @Get(':id')

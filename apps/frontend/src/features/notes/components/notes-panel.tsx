@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '@/stores/auth-store'
 import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
+import { RichTextEditor } from '@/components/ui/rich-text-editor'
 import {
   Sheet,
   SheetContent,
@@ -81,7 +81,7 @@ export function SopNotesPanel({ sopId, sopTitle }: SopNotesPanelProps) {
           写笔记
         </Button>
       </SheetTrigger>
-      <SheetContent className='w-80 sm:w-96 px-8'>
+      <SheetContent className='sm:max-w-lg px-8'>
         <SheetHeader>
           <SheetTitle className='flex items-center gap-2'>
             <StickyNote size={18} />
@@ -90,11 +90,11 @@ export function SopNotesPanel({ sopId, sopTitle }: SopNotesPanelProps) {
         </SheetHeader>
 
         <div className='mt-4 space-y-3'>
-          <Textarea
-            placeholder='在此输入笔记内容...'
+          <RichTextEditor
             value={noteContent}
-            onChange={(e) => setNoteContent(e.target.value)}
-            className='min-h-24 text-sm'
+            onChange={setNoteContent}
+            placeholder='在此输入笔记内容...'
+            minHeight='220px'
           />
           <Button
             onClick={() => addMutation.mutate(noteContent)}
@@ -135,7 +135,7 @@ export function SopNotesPanel({ sopId, sopTitle }: SopNotesPanelProps) {
                     {note.pageRef}
                   </span>
                 )}
-                <div className='text-sm whitespace-pre-wrap wrap-break-word'>{note.content}</div>
+                <div className='text-sm prose prose-sm dark:prose-invert max-w-none wrap-break-word' dangerouslySetInnerHTML={{ __html: note.content.startsWith('<') ? note.content : note.content.replace(/\n/g, '<br/>') }} />
                 <div className='mt-2 flex items-center justify-between text-xs text-muted-foreground'>
                   <span className='flex items-center gap-1'>
                     <Clock size={10} />
