@@ -2,7 +2,7 @@ import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards, Inje
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js'
 import { NotesService } from './notes.service.js'
-import { CreateNoteDto, UpdateNoteDto } from './notes.dto.js'
+import { CreateNoteDto, UpdateNoteDto } from './dto/notes.dto.js'
 
 @ApiTags('笔记')
 @ApiBearerAuth()

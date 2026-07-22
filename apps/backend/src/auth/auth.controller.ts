@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common'
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger'
 import { AuthService } from './auth.service.js'
-import { LoginDto, RegisterDto } from './auth.dto.js'
+import { LoginDto, RegisterDto } from './dto/auth.dto.js'
 import { JwtAuthGuard } from './jwt-auth.guard.js'
 
 @ApiTags('认证')

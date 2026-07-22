@@ -8,6 +8,7 @@ export interface DashboardStats {
   totalUsers: number
   activeUsers: number
   avgPassRate: number
+  totalViews: number
 }
 
 export interface MonthlyStat {

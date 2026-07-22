@@ -2,7 +2,7 @@ import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards, Inje
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js'
 import { SopsService } from './sops.service.js'
-import { CreateSopDto, UpdateSopDto } from './sops.dto.js'
+import { CreateSopDto, UpdateSopDto } from './dto/sops.dto.js'
 
 @ApiTags('SOP 文档')
 @ApiBearerAuth()

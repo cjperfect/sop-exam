@@ -6,11 +6,12 @@ export class DashboardService {
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   async getStats() {
-    const [totalSops, publishedSops, totalExams, totalUsers] = await Promise.all([
+    const [totalSops, publishedSops, totalExams, totalUsers, viewAgg] = await Promise.all([
       this.prisma.sopDocument.count({ where: { isDeleted: false } }),
       this.prisma.sopDocument.count({ where: { isDeleted: false, status: 'published' } }),
       this.prisma.submission.count({ where: { isDeleted: false } }),
       this.prisma.user.count({ where: { isDeleted: false } }),
+      this.prisma.sopDocument.aggregate({ where: { isDeleted: false }, _sum: { viewCount: true } }),
     ])
 
     const thisMonth = new Date()
@@ -30,7 +31,16 @@ export class DashboardService {
     })
     const avgPassRate = totalExams > 0 ? Math.round((passedSubmissions / totalExams) * 100) : 0
 
-    return { totalSops, publishedSops, totalExams, monthlyExams, totalUsers, activeUsers, avgPassRate }
+    return {
+      totalSops,
+      publishedSops,
+      totalExams,
+      monthlyExams,
+      totalUsers,
+      activeUsers,
+      avgPassRate,
+      totalViews: viewAgg._sum.viewCount ?? 0,
+    }
   }
 
   async getStatistics(months: number) {

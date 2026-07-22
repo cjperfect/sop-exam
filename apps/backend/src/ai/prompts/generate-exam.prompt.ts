@@ -11,7 +11,7 @@ export function buildGenerateExamPrompt(sopTitle: string, sopContent: string, qu
 3. 题目覆盖SOP的关键知识点、操作步骤、注意事项、数据指标等核心内容
 4. 单选题4个选项（A/B/C/D），只有一个正确答案
 5. 多选题5个选项（A/B/C/D/E），至少2个正确答案
-6. 判断题选项为 T（正确）/ F（错误）
+6. 判断题选项必须为 [{"key":"T","value":"正确"},{"key":"F","value":"错误"}]，答案只能是 T 或 F
 7. 填空题答案简洁明确，不超过50字
 8. 每题必须提供详细解析（explanation），说明正确原因或错误原因
 9. 每道题标注对应的SOP原文来源（sopSource），引用原文段落

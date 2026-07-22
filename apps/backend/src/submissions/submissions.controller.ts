@@ -2,7 +2,7 @@ import { Controller, Get, Post, Delete, Param, Body, Query, UseGuards, Inject, R
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js'
 import { SubmissionsService } from './submissions.service.js'
-import { CreateSubmissionDto } from './submissions.dto.js'
+import { CreateSubmissionDto } from './dto/submissions.dto.js'
 
 @ApiTags('考试记录')
 @ApiBearerAuth()

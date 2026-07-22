@@ -1,10 +1,9 @@
 {
-  "plugins": [
-    "@trivago/prettier-plugin-sort-imports",
-    "prettier-plugin-tailwindcss"
-  ],
+  "plugins": ["@trivago/prettier-plugin-sort-imports", "prettier-plugin-tailwindcss"],
   "tailwindFunctions": ["cn", "clsx"],
   "tailwindStylesheet": "./src/styles/index.css",
+  "semi": true,
+  "printWidth": 120,
   "importOrder": [
     "^path$",
     "^vite$",

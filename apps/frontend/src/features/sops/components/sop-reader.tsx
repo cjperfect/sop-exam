@@ -8,7 +8,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
-import { FileText, Play } from 'lucide-react'
+import { Eye, Play } from 'lucide-react'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
@@ -46,6 +46,10 @@ export function SopReader({ sop, onStartExam }: SopReaderProps) {
           <SopNotesPanel sopId={sop.id} sopTitle={sop.title} />
         </div>
         <div className='flex flex-wrap items-center gap-4 text-sm text-muted-foreground'>
+          <span className='flex items-center gap-1'>
+            <Eye size={14} />
+            {(sop.viewCount ?? 0).toLocaleString()} 次浏览
+          </span>
           <span>
             更新于：{new Date(sop.updatedAt).toLocaleString('zh-CN')}
           </span>

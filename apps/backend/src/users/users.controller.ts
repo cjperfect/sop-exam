@@ -2,7 +2,7 @@ import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards, Inje
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js'
 import { UsersService } from './users.service.js'
-import { CreateUserDto, UpdateUserDto } from './users.dto.js'
+import { CreateUserDto, UpdateUserDto } from './dto/users.dto.js'
 
 const ROLE_HIERARCHY: Record<string, number> = { super_admin: 3, admin: 2, user: 1 }
 

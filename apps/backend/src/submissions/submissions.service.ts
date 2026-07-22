@@ -10,7 +10,7 @@ import { Injectable, Inject, NotFoundException, Logger } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service.js'
 import { DeepSeekService } from '../ai/deepseek.service.js'
 import { buildSuggestionPrompt } from '../ai/prompts/learning-suggestion.prompt.js'
-import type { CreateSubmissionDto } from './submissions.dto.js'
+import type { CreateSubmissionDto } from './dto/submissions.dto.js'
 
 @Injectable()
 export class SubmissionsService {

@@ -115,13 +115,13 @@ export function ExamQuestion({
           </div>
         )}
 
-        {question.type === "true_false" && question.options && (
+        {question.type === "true_false" && (
           <RadioGroup
             value={String(value ?? "")}
             onValueChange={(v) => onChange(v)}
             className="flex gap-3"
           >
-            {question.options.map((opt) => (
+            {(question.options?.length ? question.options : [{ key: "T", value: "正确" }, { key: "F", value: "错误" }]).map((opt) => (
               <div
                 key={opt.key}
                 className="flex flex-1 items-center justify-center gap-2 rounded-lg border p-4 transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5"

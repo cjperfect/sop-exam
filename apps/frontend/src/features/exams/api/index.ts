@@ -41,6 +41,7 @@ export async function generateExamStreamAPI(
     onQuestion: (question: GeneratedExam["questions"][number]) => void;
     onDone?: (examId: number, questionIds: Array<{ sortOrder: number; id: number }>) => void;
   },
+  signal?: AbortSignal,
 ): Promise<void> {
   const baseUrl = import.meta.env.VITE_API_URL || "";
   const token = useAuthStore.getState().auth.accessToken;
@@ -52,6 +53,7 @@ export async function generateExamStreamAPI(
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify(params),
+    signal,
   });
 
   if (!response.ok) {
@@ -169,7 +171,7 @@ export async function createSubmission(submission: {
 }
 
 /** 获取提交记录 */
-export async function fetchSubmissions(page = 1) {
+export async function fetchSubmissions(page = 1): Promise<Submission[]> {
   const { data } = await api.get<{ items: Submission[]; total: number }>(
     "/api/submissions",
     { params: { page, pageSize: 100 } },

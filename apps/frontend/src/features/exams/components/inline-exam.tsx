@@ -43,6 +43,7 @@ export function InlineExam({ sop, onBack }: InlineExamProps) {
   const timerRunningRef = useRef(true);
 
   useEffect(() => {
+    const abortController = new AbortController();
     let cancelled = false;
     (async () => {
       try {
@@ -69,15 +70,19 @@ export function InlineExam({ sop, onBack }: InlineExamProps) {
               questionIdMap.current = map;
             },
           },
+          abortController.signal,
         );
       } catch (e) {
-        if (!cancelled) console.error("生成试卷失败:", e);
+        if (!cancelled && !abortController.signal.aborted) {
+          console.error("生成试卷失败:", e);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
     return () => {
       cancelled = true;
+      abortController.abort();
     };
   }, [sop]);
 
@@ -123,6 +128,17 @@ export function InlineExam({ sop, onBack }: InlineExamProps) {
     toast.warning("⏰ 距离考试结束还有 1 分钟，请尽快作答！");
   }, []);
 
+  // 交卷期间禁止刷新页面
+  useEffect(() => {
+    if (!submitting) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [submitting]);
+
   // 初始加载（尚无题目）
   if (loading && questions.length === 0) {
     return (
@@ -142,7 +158,7 @@ export function InlineExam({ sop, onBack }: InlineExamProps) {
           </div>
 
           {streamText && (
-            <pre className="overflow-auto rounded-lg bg-muted/50 p-4 text-left text-xl whitespace-pre-wrap text-muted-foreground">
+            <pre className="max-h-[50vh] overflow-auto rounded-lg bg-muted/50 p-4 text-left text-[14px] whitespace-pre-wrap text-muted-foreground">
               {streamText}
             </pre>
           )}
@@ -168,6 +184,19 @@ export function InlineExam({ sop, onBack }: InlineExamProps) {
 
   return (
     <>
+      {/* 交卷遮罩 — 全部不可操作 */}
+      {submitting && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4 text-center">
+            <Spinner className="h-10 w-10 text-primary" />
+            <div>
+              <p className="text-lg font-semibold">正在批改试卷</p>
+              <p className="text-sm text-muted-foreground">请勿刷新或关闭页面</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {loading && questions.length > 0 && (
         <div className="mb-4 rounded-lg border border-primary/20 bg-primary/5 px-4 py-2">
           <div className="flex items-center gap-3">

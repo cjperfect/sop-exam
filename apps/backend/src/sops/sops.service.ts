@@ -21,6 +21,8 @@ export class SopsService {
   async findOne(id: number) {
     const doc = await this.prisma.sopDocument.findUnique({ where: { id, isDeleted: false } })
     if (!doc) throw new NotFoundException('SOP 不存在')
+    // 异步增加浏览量，不阻塞响应
+    this.prisma.sopDocument.update({ where: { id }, data: { viewCount: { increment: 1 } } }).catch(() => {})
     return doc
   }
 
