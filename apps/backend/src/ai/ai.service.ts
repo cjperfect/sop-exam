@@ -1,123 +1,110 @@
-import { Injectable, Inject, Logger } from '@nestjs/common'
-import OpenAI from 'openai'
-import { DEEPSEEK_SERVICE, isDeepSeekConfigured } from './deepseek.provider.js'
+import { Injectable, Inject, Logger, NotFoundException } from '@nestjs/common'
+import { DeepSeekService } from './deepseek.service.js'
+import { SopsService } from '../sops/sops.service.js'
+import { ExamConfigService } from '../exam-config/exam-config.service.js'
+import { ExamsService } from '../exams/exams.service.js'
 import { buildGenerateExamPrompt } from './prompts/generate-exam.prompt.js'
 import { buildSuggestionPrompt } from './prompts/learning-suggestion.prompt.js'
-import { mockGenerateExam } from './mock/mock-exam-generator.js'
 import { mockGenerateSuggestions } from './mock/mock-suggestions.js'
-import type { GenerateExamDto, GradeExamDto } from './ai.dto.js'
-import type { GeneratedExam, GradingResult, AnswerRecord } from '@sop/shared'
+import type { GenerateExamDto, GradeExamDto } from './dto/ai.dto.js'
+import type { GradingResult, AnswerRecord } from '@sop/shared'
 
 @Injectable()
 export class AiService {
   private readonly logger = new Logger(AiService.name)
 
   constructor(
-    @Inject(DEEPSEEK_SERVICE) private readonly deepseek: OpenAI | null,
+    @Inject(DeepSeekService) private readonly deepseek: DeepSeekService,
+    @Inject(SopsService) private readonly sops: SopsService,
+    @Inject(ExamConfigService) private readonly examConfig: ExamConfigService,
+    @Inject(ExamsService) private readonly examsService: ExamsService,
   ) {}
 
-  /** 生成试卷 — 并行分批调用 DeepSeek，提升速度 */
-  async generateExam(dto: GenerateExamDto): Promise<GeneratedExam> {
-    const { sopContent, sopTitle, questionCount = 10 } = dto
+  /** 流式生成试卷 — AsyncGenerator，逐事件 yield，流结束后自动保存试卷并返回 examId */
+  async *generateExamStream(dto: GenerateExamDto): AsyncGenerator<{
+    type: 'config' | 'message' | 'question' | 'done' | 'error'
+    data: unknown
+  }> {
+    const { sopId } = dto
 
-    if (!isDeepSeekConfigured() || !this.deepseek) {
-      this.logger.warn('DeepSeek not configured, using mock exam generator')
-      return mockGenerateExam(sopContent, sopTitle, questionCount)
+    if (!this.deepseek.isConfigured) {
+      throw new Error('DeepSeek API 未配置，无法生成试卷')
     }
 
-    const BATCH_SIZE = 3
-    const batchTotal = Math.ceil(questionCount / BATCH_SIZE)
-    const batches = Array.from({ length: batchTotal }, (_, i) => {
-      const remaining = questionCount - i * BATCH_SIZE
-      return Math.min(BATCH_SIZE, remaining)
-    })
+    const [sop, config] = await Promise.all([this.sops.findOne(sopId), this.examConfig.get()])
+    if (!sop) throw new NotFoundException('SOP 不存在')
 
-    // 并行调用所有批次
-    const batchResults = await Promise.allSettled(
-      batches.map((count, i) =>
-        this.generateBatch(sopTitle, sopContent, count, i, batchTotal),
-      ),
-    )
+    const questionCount = config.questionCount
+    yield { type: 'config', data: { timeLimit: config.timeLimit, passingScore: config.passingScore, questionCount } }
 
-    // 合并结果
-    const allQuestions: GeneratedExam['questions'] = []
-    for (const result of batchResults) {
-      if (result.status === 'fulfilled') {
-        allQuestions.push(...result.value.questions)
+    const { systemPrompt, userPrompt } = buildGenerateExamPrompt(sop.title, sop.content, questionCount)
+
+    let qIndex = 0
+    const questions: Array<{
+      type: string
+      content: string
+      options: string
+      answer: string
+      explanation: string
+      score: number
+      sortOrder: number
+      sopSource: string
+    }> = []
+
+    const stream = this.deepseek.streamChat(systemPrompt, userPrompt)
+
+    for await (const event of stream) {
+      if (event.type === 'message') {
+        yield { type: 'message', data: { text: event.text } }
+      } else if (event.type === 'line') {
+        try {
+          const q = JSON.parse(event.text)
+          if (!q.type || !q.content) continue
+
+          const questionData = {
+            type: q.type,
+            content: q.content,
+            options: q.options ?? [],
+            answer: q.answer ?? '',
+            explanation: q.explanation ?? '',
+            score: q.score ?? 10,
+            sortOrder: ++qIndex,
+            sopSource: q.sopSource ?? '',
+          }
+
+          questions.push({
+            ...questionData,
+            options: JSON.stringify(questionData.options),
+          })
+
+          yield { type: 'question', data: questionData }
+        } catch {
+          this.logger.warn(`Failed to parse line: ${event.text.slice(0, 80)}...`)
+        }
       }
     }
 
-    // 重新编号 sortOrder
-    allQuestions.forEach((q, i) => { q.sortOrder = i + 1 })
-
-    if (allQuestions.length === 0) {
-      this.logger.warn('All batches failed, falling back to mock')
-      return mockGenerateExam(sopContent, sopTitle, questionCount)
+    // 流结束后保存试卷到数据库
+    if (questions.length > 0) {
+      try {
+        const exam = await this.examsService.create({
+          sopId: sop.id,
+          sopTitle: sop.title,
+          title: `${sop.title} — 知识考核`,
+          description: `基于「${sop.title}」的 AI 生成试卷`,
+          totalQuestions: questions.length,
+          totalScore: questions.reduce((sum, q) => sum + q.score, 0),
+          questions,
+        })
+        yield { type: 'done', data: { examId: exam.id, questionIds: exam.questions.map(q => ({ sortOrder: q.sortOrder, id: q.id })) } }
+        this.logger.log(`Exam ${exam.id} created with ${questions.length} questions`)
+      } catch (err) {
+        this.logger.error(`Failed to create exam: ${(err as Error).message}`)
+        yield { type: 'error', data: { message: '试卷保存失败' } }
+      }
+    } else {
+      yield { type: 'error', data: { message: '未生成任何题目' } }
     }
-
-    const parsed: GeneratedExam = {
-      title: `${sopTitle} — 知识考核`,
-      description: `基于《${sopTitle}》自动生成的 ${allQuestions.length} 道考题`,
-      questions: allQuestions,
-      timeLimit: Math.ceil(questionCount * 1.5),
-      passingScore: 60,
-    }
-
-    this.logger.log(`Generated ${allQuestions.length} questions via DeepSeek (${batchTotal} batches)`)
-    return parsed
-  }
-
-  /** 单批次题目生成 */
-  private async generateBatch(
-    sopTitle: string,
-    sopContent: string,
-    count: number,
-    batchIndex: number,
-    batchTotal: number,
-  ): Promise<GeneratedExam> {
-    const { systemPrompt, userPrompt } = buildGenerateExamPrompt(
-      sopTitle,
-      sopContent,
-      count,
-      batchIndex,
-      batchTotal,
-    )
-
-    const response = await this.deepseek!.chat.completions.create({
-      model: 'deepseek-chat',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-      temperature: 0.7,
-      max_tokens: 2048,
-    })
-
-    const raw = response.choices[0]?.message?.content?.trim() ?? ''
-    const parsed = this.parseJsonResponse<GeneratedExam>(raw)
-
-    if (!parsed.questions?.length) {
-      throw new Error(`Batch ${batchIndex + 1}: AI response has no questions`)
-    }
-
-    // 补充默认值
-    parsed.questions = parsed.questions.map((q, i) => ({
-      type: q.type,
-      content: q.content,
-      options: q.options ?? [],
-      answer: q.answer ?? '',
-      explanation: q.explanation ?? '',
-      score: q.score ?? 10,
-      sortOrder: batchIndex * 3 + i + 1,
-      sopSource: q.sopSource ?? '',
-    }))
-
-    if (!parsed.title) parsed.title = `${sopTitle} — 知识考核`
-    if (!parsed.description) parsed.description = `基于《${sopTitle}》自动生成的考题`
-    if (!parsed.timeLimit) parsed.timeLimit = Math.ceil(count * 1.5)
-    if (!parsed.passingScore) parsed.passingScore = 60
-
-    return parsed
   }
 
   /** 批改试卷并生成学习建议 */
@@ -146,13 +133,13 @@ export class AiService {
 
     const totalScore = answerRecords.reduce((s, r) => s + r.score, 0)
     const totalMaxScore = questions.reduce((s, q) => s + q.score, 0)
-    const isPassed = totalMaxScore > 0 ? (totalScore / totalMaxScore) >= 0.6 : false
+    const isPassed = totalMaxScore > 0 ? totalScore / totalMaxScore >= 0.6 : false
 
     // 阶段2：AI 逐题点评 + 全局学习建议
     let suggestions: string
     const wrongCount = answerRecords.filter((r) => !r.isCorrect).length
 
-    if (isDeepSeekConfigured() && this.deepseek) {
+    if (this.deepseek.isConfigured) {
       try {
         const { systemPrompt, userPrompt } = buildSuggestionPrompt({
           examTitle,
@@ -169,18 +156,11 @@ export class AiService {
           })),
         })
 
-        const response = await this.deepseek.chat.completions.create({
-          model: 'deepseek-chat',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt },
-          ],
-          temperature: 0.8,
-          max_tokens: 2048,
-        })
-
-        const raw = response.choices[0]?.message?.content?.trim() ?? ''
-        const parsed = this.parseJsonResponse<{ perQuestion: Array<{ index: number; feedback: string }>; overall: string }>(raw)
+        const raw = await this.deepseek.chat(systemPrompt, userPrompt)
+        const parsed = this.parseJsonResponse<{
+          perQuestion: Array<{ index: number; feedback: string }>
+          overall: string
+        }>(raw)
 
         // 逐题应用 AI 点评
         if (parsed.perQuestion?.length) {
@@ -212,11 +192,7 @@ export class AiService {
   }
 
   /** 客观题判分 */
-  private checkAnswer(
-    type: string,
-    userAnswer: string | string[] | undefined,
-    correctAnswer: string,
-  ): boolean {
+  private checkAnswer(type: string, userAnswer: string | string[] | undefined, correctAnswer: string): boolean {
     if (userAnswer === undefined || userAnswer === null) return false
 
     switch (type) {

@@ -1,11 +1,17 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common'
-import { Response } from 'express'
+import { Request, Response } from 'express'
 
 @Catch()
 export class ApiExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp()
+    const request = ctx.getRequest<Request>()
     const response = ctx.getResponse<Response>()
+
+    // SSE 流式端点已手动处理错误，不覆盖
+    if (request.url?.includes('generate-exam-stream')) {
+      return
+    }
 
     let code = HttpStatus.INTERNAL_SERVER_ERROR
     let msg = 'Internal server error'

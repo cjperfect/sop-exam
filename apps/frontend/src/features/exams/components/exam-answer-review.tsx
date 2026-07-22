@@ -1,8 +1,8 @@
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { CheckCircle2, XCircle, BookOpen } from 'lucide-react'
-import type { AnswerRecord } from '../data/submission-schema'
-import { questionTypeLabels } from '../data/question-schema'
+import type { AnswerRecord } from '@sop/shared'
+import { questionTypeLabels } from './exam-question'
 
 interface ExamAnswerReviewProps {
   answers: AnswerRecord[]

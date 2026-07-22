@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Param, Body, Query, UseGuards, Inject } from '@nestjs/common'
+import { Controller, Get, Post, Delete, Param, Body, Query, UseGuards, Inject, Req } from '@nestjs/common'
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js'
 import { SubmissionsService } from './submissions.service.js'
@@ -48,8 +48,8 @@ export class SubmissionsController {
 
   @Post()
   @ApiOperation({ summary: '创建考试记录' })
-  create(@Body() dto: CreateSubmissionDto) {
-    return this.service.create(dto)
+  create(@Body() dto: CreateSubmissionDto, @Req() req: any) {
+    return this.service.create(dto, req.user)
   }
 
   @Delete(':id')

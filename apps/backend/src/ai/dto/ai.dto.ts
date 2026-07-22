@@ -1,18 +1,9 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { ApiProperty } from '@nestjs/swagger'
 import type { Question } from '@sop/shared'
 
 export class GenerateExamDto {
-  @ApiProperty({ description: 'SOP 内容' })
-  sopContent!: string
-
-  @ApiProperty({ description: 'SOP 标题' })
-  sopTitle!: string
-
   @ApiProperty({ description: 'SOP ID' })
   sopId!: number
-
-  @ApiPropertyOptional({ description: '题目数量', default: 10 })
-  questionCount?: number
 }
 
 export class GradeExamDto {

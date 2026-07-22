@@ -91,7 +91,5 @@ export function mockGenerateExam(
     title: `${sopTitle} — 知识考核`,
     description: `基于《${sopTitle}》自动生成的 ${questionCount} 道考题，用于检验学习效果。`,
     questions,
-    timeLimit: Math.ceil(questionCount * 1.5),
-    passingScore: 60,
   }
 }

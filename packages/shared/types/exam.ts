@@ -49,49 +49,9 @@ export interface AnswerRecord {
   sopSource?: string
 }
 
-export interface Submission {
-  id: number
-  examId: number
-  sopId: number
-  sopTitle: string
-  examTitle: string
-  userId: number
-  userName: string
-  answers: AnswerRecord[]
-  totalScore: number
-  totalMaxScore: number
-  passingScore: number
-  isPassed: boolean
-  startedAt: string
-  submittedAt: string
-  timeSpent: number
-  suggestions: string
-  createdAt: string
-  updatedAt: string
-  exam?: {
-    id: number
-    title: string
-    description: string
-    totalQuestions: number
-    totalScore: number
-    passingScore: number
-    timeLimit: number
-    sopTitle: string
-  } | null
-  user?: {
-    id: number
-    username: string
-    employeeId: string
-    department: string
-  } | null
-}
-
 /** API: 生成试卷请求参数 */
 export interface GenerateExamParams {
-  sopContent: string
-  sopTitle: string
   sopId: number
-  questionCount?: number
 }
 
 /** API: 生成试卷响应 */
@@ -99,8 +59,6 @@ export interface GeneratedExam {
   title: string
   description: string
   questions: Question[]
-  timeLimit: number
-  passingScore: number
 }
 
 /** API: 批改试卷请求参数 */

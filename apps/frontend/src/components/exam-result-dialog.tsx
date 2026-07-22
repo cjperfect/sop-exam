@@ -11,6 +11,7 @@ import { Separator } from '@/components/ui/separator'
 import { CheckCircle2, XCircle, BookOpen, Clock, Trophy, ListChecks, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { fetchSubmission } from '@/features/exams/api'
+import type { Submission } from '@sop/shared'
 
 interface QuestionData {
   id: string
@@ -63,22 +64,27 @@ function isOptionsEmpty(options: unknown): boolean {
 interface ExamResultDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  /** 考试批卷结果模式（从 sessionStorage 读取） */
+  /** 考试批卷结果模式（从后端 fetch） */
   submissionId?: string | null
+  /** 考试批卷结果模式（直接传入，跳过 fetch） */
+  submission?: Submission | null
   /** 考试预览模式（管理员查看考试详情） */
   preview?: ExamPreviewData | null
 }
 
-export function ExamResultDialog({ open, onOpenChange, submissionId, preview }: ExamResultDialogProps) {
+export function ExamResultDialog({ open, onOpenChange, submissionId, submission: inlineSubmission, preview }: ExamResultDialogProps) {
   const isPreview = !!preview
+  const hasInline = !!inlineSubmission
 
-  const { data: submission, isLoading } = useQuery({
+  const { data: fetched, isLoading } = useQuery({
     queryKey: ['submission', submissionId],
     queryFn: () => fetchSubmission(submissionId!),
-    enabled: !!submissionId && !isPreview,
+    enabled: !!submissionId && !isPreview && !hasInline,
   })
 
-  if (!isPreview && isLoading) {
+  const submission = hasInline ? inlineSubmission : fetched
+
+  if (!isPreview && !hasInline && isLoading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className='sm:max-w-2xl flex flex-col max-h-[85vh]'>

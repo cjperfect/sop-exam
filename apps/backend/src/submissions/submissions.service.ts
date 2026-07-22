@@ -1,10 +1,25 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common'
+/**
+ * 考试提交服务 — 后端自动判分 + AI 学习建议
+ *
+ * 交卷时:
+ * 1. 查 exam + questions → 本地比对答案判分
+ * 2. 调用 DeepSeek 生成逐题点评 + 全局学习建议
+ * 3. 保存 submission + answer_details 到数据库
+ */
+import { Injectable, Inject, NotFoundException, Logger } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service.js'
+import { DeepSeekService } from '../ai/deepseek.service.js'
+import { buildSuggestionPrompt } from '../ai/prompts/learning-suggestion.prompt.js'
 import type { CreateSubmissionDto } from './submissions.dto.js'
 
 @Injectable()
 export class SubmissionsService {
-  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(SubmissionsService.name)
+
+  constructor(
+    @Inject(PrismaService) private readonly prisma: PrismaService,
+    @Inject(DeepSeekService) private readonly deepseek: DeepSeekService,
+  ) {}
 
   /**
    * 分页获取考试记录列表
@@ -191,52 +206,177 @@ export class SubmissionsService {
   }
 
   /**
-   * 创建考试记录
-   * 同时创建答题详情记录
+   * 创建考试记录 — 后端自动判分 + AI 学习建议
+   * user 来自 JWT（{ id, username, accountNo, ... }）
    */
-  async create(dto: CreateSubmissionDto) {
-    // 验证考试是否存在
+  async create(dto: CreateSubmissionDto, user?: { id: number; username?: string; accountNo?: number }) {
+    const now = new Date()
+    // 验证考试是否存在，同时获取题目和配置
     const exam = await this.prisma.exam.findUnique({
       where: { id: dto.examId, isDeleted: false },
+      include: {
+        questions: { orderBy: { sortOrder: 'asc' } },
+        config: { select: { passingScore: true } },
+        sop: { select: { title: true } },
+      },
     })
     if (!exam) {
       throw new NotFoundException(`考试不存在 (examId=${dto.examId})`)
     }
 
+    // 构建用户答案映射
+    const userAnswerMap = new Map<string, string>()
+    if (dto.answerDetails) {
+      for (const a of dto.answerDetails) {
+        userAnswerMap.set(String(a.questionId), a.userAnswer ?? '')
+      }
+    }
+
+    // 本地判分
+    let totalScore = 0
+    const totalMaxScore = exam.questions.reduce((s, q) => s + q.score, 0)
+    const gradedDetails: Array<{
+      questionId: number
+      examId: number
+      userAnswer: string | null
+      correctAnswer: string | null
+      isCorrect: boolean
+      aiScore: number
+      aiFeedback: string | null
+    }> = []
+
+    const questionResults: Array<{
+      index: number
+      questionContent: string
+      isCorrect: boolean
+      correctAnswer: string
+      userAnswer: string
+      sopSource: string
+    }> = []
+
+    for (const q of exam.questions) {
+      const userAnswer = userAnswerMap.get(String(q.id)) ?? ''
+      const correctAnswer = q.answer
+      const isCorrect = this.checkAnswer(q.type, userAnswer, correctAnswer)
+      const score = isCorrect ? q.score : 0
+      totalScore += score
+
+      gradedDetails.push({
+        questionId: q.id,
+        examId: dto.examId,
+        userAnswer: userAnswer || null,
+        correctAnswer,
+        isCorrect,
+        aiScore: score,
+        aiFeedback: isCorrect ? null : `正确答案是 ${correctAnswer}。${q.explanation ?? ''}`,
+      })
+
+      questionResults.push({
+        index: q.sortOrder,
+        questionContent: q.content,
+        isCorrect,
+        correctAnswer: Array.isArray(correctAnswer) ? (correctAnswer as any).join(',') : String(correctAnswer),
+        userAnswer: String(userAnswer),
+        sopSource: q.sopSource ?? '',
+      })
+    }
+
+    const passingScore = exam.config?.passingScore ?? 60
+    const isPassed = totalMaxScore > 0 ? totalScore / totalMaxScore >= passingScore / 100 : false
+
+    // AI 学习建议
+    let suggestions: string | null = null
+    if (this.deepseek.isConfigured) {
+      try {
+        const { systemPrompt, userPrompt } = buildSuggestionPrompt({
+          examTitle: exam.title,
+          sopTitle: exam.sop?.title ?? '',
+          totalScore,
+          totalMaxScore,
+          questionResults,
+        })
+
+        const raw = await this.deepseek.chat(systemPrompt, userPrompt)
+
+        // 提取 overall 建议
+        try {
+          const parsed = JSON.parse(raw.replace(/```(?:json)?\s*\n?([\s\S]*?)```/, '$1').trim()) as {
+            perQuestion?: Array<{ index: number; feedback: string }>
+            overall?: string
+          }
+          suggestions = parsed.overall?.trim() ?? raw
+
+          // 逐题应用 AI 点评
+          if (parsed.perQuestion?.length) {
+            for (const pq of parsed.perQuestion) {
+              const detail = gradedDetails[pq.index - 1]
+              if (detail) {
+                detail.aiFeedback = pq.feedback
+              }
+            }
+          }
+        } catch {
+          suggestions = raw
+        }
+
+        this.logger.log(`Generated AI suggestions for submission`)
+      } catch (err) {
+        this.logger.warn(`AI suggestions failed: ${(err as Error).message}`)
+        suggestions = `本次考试得分 ${totalScore}/${totalMaxScore}，${isPassed ? '已通过' : '未通过'}。建议复习相关 SOP 文档。`
+      }
+    }
+
+    // 保存（userId/userName 从 JWT 取，时间由服务端计算）
+    const startedAt = exam.createdAt
     const submission = await this.prisma.submission.create({
       data: {
         examId: dto.examId,
         sopId: dto.sopId,
-        userId: dto.userId,
-        userName: dto.userName ?? '',
-        startedAt: new Date(dto.startedAt),
-        submittedAt: dto.submittedAt ? new Date(dto.submittedAt) : null,
-        timeSpent: dto.timeSpent ?? 0,
-        totalScore: dto.totalScore ?? 0,
-        totalMaxScore: dto.totalMaxScore ?? 0,
-        isPassed: dto.isPassed ?? false,
-        suggestions: dto.suggestions ?? null,
+        userId: user?.id ?? 0,
+        userName: user?.username ?? '',
+        startedAt,
+        submittedAt: now,
+        timeSpent: Math.round((now.getTime() - startedAt.getTime()) / 1000),
+        totalScore,
+        totalMaxScore,
+        isPassed,
+        suggestions,
       },
     })
 
-    // 如果有答题详情，批量创建 AnswerDetail 记录
-    if (dto.answerDetails && dto.answerDetails.length > 0) {
-      await this.prisma.answerDetail.createMany({
-        data: dto.answerDetails.map((detail) => ({
-          submissionId: submission.id,
-          questionId: detail.questionId,
-          examId: dto.examId,
-          userAnswer: detail.userAnswer ?? null,
-          correctAnswer: detail.correctAnswer ?? null,
-          isCorrect: detail.isCorrect ?? false,
-          aiScore: detail.aiScore ?? 0,
-          aiFeedback: detail.aiFeedback ?? null,
-        })),
-      })
-    }
+    await this.prisma.answerDetail.createMany({
+      data: gradedDetails.map((d) => ({ ...d, submissionId: submission.id })),
+    })
 
-    // 返回带关联数据的完整记录
     return this.findOne(submission.id)
+  }
+
+  /** 客观题判分 */
+  private checkAnswer(type: string, userAnswer: string, correctAnswer: string): boolean {
+    if (!userAnswer) return false
+
+    switch (type) {
+      case 'single_choice':
+      case 'true_false':
+        return userAnswer.trim().toUpperCase() === correctAnswer.trim().toUpperCase()
+
+      case 'multi_choice': {
+        const ua = (Array.isArray(userAnswer) ? userAnswer : [userAnswer])
+          .map((v) => String(v).trim().toUpperCase())
+          .sort()
+        const ca = String(correctAnswer)
+          .split(',')
+          .map((v) => v.trim().toUpperCase())
+          .sort()
+        return ua.length === ca.length && ua.every((v, i) => v === ca[i])
+      }
+
+      case 'fill_blank':
+        return userAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase()
+
+      default:
+        return userAnswer === correctAnswer
+    }
   }
 
   /**

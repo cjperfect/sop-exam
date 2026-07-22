@@ -306,9 +306,16 @@ async function main() {
   await prisma.user.deleteMany()
   console.log('  ✅ 所有表已清空\n')
 
+  // ---- Exam Config ----
+  console.log('📦 填充考试配置...')
+  await prisma.examConfig.create({
+    data: { passingScore: 60, totalScore: 100, timeLimit: 30, questionCount: 10 },
+  })
+  console.log('  ✅ 默认考试配置: 通过60分 / 总分100 / 限时30分钟 / 10题\n')
+
   // ---- Users ----
   console.log('📦 填充用户数据...')
-  const adminPassword = bcrypt.hashSync('admin', 10)
+  const adminPassword = bcrypt.hashSync('admin123', 10)
   await prisma.user.upsert({
     where: { username: 'admin' },
     update: {
@@ -326,9 +333,9 @@ async function main() {
       mustChangePassword: false,
     },
   })
-  console.log('  ✅ 超级管理员: admin / admin / 800000')
+  console.log('  ✅ 超级管理员: admin / admin123 / 800000')
 
-  const userPassword = bcrypt.hashSync('user', 10)
+  const userPassword = bcrypt.hashSync('user123', 10)
   await prisma.user.upsert({
     where: { username: 'user' },
     update: {
@@ -346,7 +353,7 @@ async function main() {
       mustChangePassword: false,
     },
   })
-  console.log('  ✅ 普通用户: user / user / 800001')
+  console.log('  ✅ 普通用户: user / user123 / 800001')
 
   // ---- Departments ----
   console.log('\n📦 填充部门数据...')
