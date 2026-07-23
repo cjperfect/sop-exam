@@ -8,7 +8,7 @@ export class UsersService {
 
   private select = {
     id: true, username: true, employeeId: true,
-    role: true, createdAt: true,
+    department: true, role: true, createdAt: true,
   } as const
 
   async findAll(page = 1, pageSize = 10, username?: string, employeeId?: string, role?: string) {
@@ -27,17 +27,24 @@ export class UsersService {
     if (and.length > 0) {
       where.AND = and
     }
-    const [items, total] = await Promise.all([
+    const [items, total, depts] = await Promise.all([
       this.prisma.user.findMany({ where: where as any, orderBy: { createdAt: 'desc' }, skip, take: pageSize, select: this.select }),
       this.prisma.user.count({ where: where as any }),
+      this.prisma.department.findMany({ where: { isDeleted: false }, select: { id: true, name: true } }),
     ])
-    return { items, total, page, pageSize }
+    const deptMap = new Map(depts.map((d) => [String(d.id), d.name]))
+    const mappedItems = items.map((item) => ({
+      ...item,
+      department: deptMap.get(item.department) || item.department,
+    }))
+    return { items: mappedItems, total, page, pageSize }
   }
 
   async findOne(id: number) {
     const user = await this.prisma.user.findUnique({ where: { id, isDeleted: false }, select: this.select })
     if (!user) throw new NotFoundException('用户不存在')
-    return user
+    const dept = await this.prisma.department.findUnique({ where: { id: Number(user.department) }, select: { name: true } })
+    return { ...user, department: dept?.name || user.department }
   }
 
   async getRawUser(id: number) {

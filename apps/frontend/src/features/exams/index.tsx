@@ -10,14 +10,14 @@ import { Header } from "@/components/layout/header";
 import { Main } from "@/components/layout/main";
 import { ProfileDropdown } from "@/components/profile-dropdown";
 import { ThemeSwitch } from "@/components/theme-switch";
-import { fetchSubmissions } from "./api";
+import { fetchMySubmissions } from "./api";
 import { ExamListTable } from "./components/exam-list-table";
 
 export function ExamHistory() {
   const [submissionId, setSubmissionId] = useState<string | null>(null);
   const { data: submissions = [], isLoading } = useQuery({
-    queryKey: ["submissions"],
-    queryFn: () => fetchSubmissions(),
+    queryKey: ["my-submissions"],
+    queryFn: () => fetchMySubmissions(),
   });
 
   const passedCount = submissions.filter((s) => s.isPassed).length;

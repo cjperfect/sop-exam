@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Loader2, StickyNote, Clock, Bookmark, User } from 'lucide-react'
+import { Loader2, StickyNote, Clock, User } from 'lucide-react'
 
 interface NoteDetailDialogProps {
   noteId: string | null
@@ -56,15 +56,6 @@ export function NoteDetailDialog({ noteId, onOpenChange }: NoteDetailDialogProps
                 {displayNote.userName || '匿名用户'}
               </p>
             </div>
-            {displayNote.pageRef && (
-              <div>
-                <p className='text-xs text-muted-foreground mb-1'>章节</p>
-                <p className='text-sm flex items-center gap-1'>
-                  <Bookmark size={14} />
-                  {displayNote.pageRef}
-                </p>
-              </div>
-            )}
             <div>
               <p className='text-xs text-muted-foreground mb-1'>内容</p>
               <div

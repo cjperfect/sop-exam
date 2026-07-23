@@ -5,7 +5,7 @@ export interface Note {
   userId: number
   userName: string
   content: string
-  pageRef?: string
+
   createdAt: string
   updatedAt: string
 }

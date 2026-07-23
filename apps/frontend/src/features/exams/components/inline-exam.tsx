@@ -1,13 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { Question } from "@sop/shared";
 import type { SopDocument, Submission } from "@sop/shared";
-import {
-  ArrowLeft,
-  ChevronLeft,
-  ChevronRight,
-  Send,
-  Loader2,
-} from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Send, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -36,16 +30,18 @@ export function InlineExam({ sop, onBack }: InlineExamProps) {
   const [timeLimit, setTimeLimit] = useState(15);
   const [exitOpen, setExitOpen] = useState(false);
   const [resultOpen, setResultOpen] = useState(false);
-  const [submissionResult, setSubmissionResult] = useState<Submission | null>(
-    null,
-  );
+  const [submissionResult, setSubmissionResult] = useState<Submission | null>(null);
   const questionIdMap = useRef<Map<number, number>>(new Map());
   const timerRunningRef = useRef(true);
+  const onBackRef = useRef(onBack);
+  onBackRef.current = onBack;
 
   useEffect(() => {
     const abortController = new AbortController();
     let cancelled = false;
-    (async () => {
+
+    // setTimeout(0) 跳过 React 18 StrictMode 的 mount→unmount→remount 周期
+    const timer = setTimeout(async () => {
       try {
         await generateExamStreamAPI(
           { sopId: sop.id },
@@ -79,12 +75,15 @@ export function InlineExam({ sop, onBack }: InlineExamProps) {
       } finally {
         if (!cancelled) setLoading(false);
       }
-    })();
+    }, 0);
+
     return () => {
       cancelled = true;
+      clearTimeout(timer);
       abortController.abort();
     };
-  }, [sop, onBack]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sop.id]);
 
   const handleAnswerChange = useCallback(
     (value: string | string[]) => {
@@ -107,10 +106,7 @@ export function InlineExam({ sop, onBack }: InlineExamProps) {
         sopId: sop.id,
         answerDetails: questions.map((q, i) => ({
           questionId: questionIdMap.current.get(q.sortOrder) ?? q.sortOrder,
-          userAnswer:
-            typeof answers[i] === "string"
-              ? answers[i]
-              : JSON.stringify(answers[i] ?? ""),
+          userAnswer: typeof answers[i] === "string" ? answers[i] : JSON.stringify(answers[i] ?? ""),
         })),
       });
       setSubmissionResult(saved);
@@ -152,13 +148,11 @@ export function InlineExam({ sop, onBack }: InlineExamProps) {
                 <Spinner className="h-5 w-5 text-primary-foreground" />
               </div>
             </div>
-            <p className="mt-3 text-lg font-semibold tracking-tight">
-              AI 正在生成试卷
-            </p>
+            <p className="mt-3 text-lg font-semibold tracking-tight">AI 正在生成试卷</p>
           </div>
 
           {streamText && (
-            <pre className="max-h-[50vh] overflow-auto rounded-lg bg-muted/50 p-4 text-left text-[14px] whitespace-pre-wrap text-muted-foreground">
+            <pre className="max-h-[60vh] overflow-auto rounded-lg bg-muted/50 p-4 text-left text-[14px] whitespace-pre-wrap text-muted-foreground">
               {streamText}
             </pre>
           )}
@@ -201,12 +195,8 @@ export function InlineExam({ sop, onBack }: InlineExamProps) {
         <div className="mb-4 rounded-lg border border-primary/20 bg-primary/5 px-4 py-2">
           <div className="flex items-center gap-3">
             <Spinner className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-primary">
-              AI 生成中... 已完成 {questions.length} 题
-            </span>
-            <pre className="flex-1 truncate text-xs text-muted-foreground">
-              {streamText.slice(-200)}
-            </pre>
+            <span className="text-sm font-medium text-primary">AI 生成中... 已完成 {questions.length} 题</span>
+            <pre className="flex-1 truncate text-xs text-muted-foreground">{streamText.slice(-200)}</pre>
           </div>
         </div>
       )}
@@ -233,11 +223,7 @@ export function InlineExam({ sop, onBack }: InlineExamProps) {
       {/* 试题区域 */}
       <div className="mx-auto max-w-3xl">
         <div className="mb-6">
-          <ExamProgress
-            current={currentIndex + 1}
-            total={questions.length}
-            answers={answers}
-          />
+          <ExamProgress current={currentIndex + 1} total={questions.length} answers={answers} />
         </div>
 
         <Separator className="mb-6" />
@@ -264,21 +250,12 @@ export function InlineExam({ sop, onBack }: InlineExamProps) {
             已答 {Object.keys(answers).length} / {questions.length} 题
           </span>
           {currentIndex < questions.length - 1 ? (
-            <Button
-              onClick={() =>
-                setCurrentIndex((i) => Math.min(questions.length - 1, i + 1))
-              }
-              disabled={loading}
-            >
+            <Button onClick={() => setCurrentIndex((i) => Math.min(questions.length - 1, i + 1))} disabled={loading}>
               下一题
               <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
           ) : (
-            <Button
-              onClick={handleSubmit}
-              disabled={submitting || loading}
-              className="bg-teal-600 hover:bg-teal-700"
-            >
+            <Button onClick={handleSubmit} disabled={submitting || loading} className="bg-teal-600 hover:bg-teal-700">
               {submitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -20,7 +20,8 @@ model User {
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
 
-  submissions Submission[]
+  submissions  Submission[]
+  sopDocuments SopDocument[]
 
   @@map("users")
 }
@@ -33,26 +34,31 @@ model Department {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
+  sopDocuments SopDocument[]
+
   @@map("departments")
 }
 
 model SopDocument {
-  id             Int      @id @default(autoincrement())
-  title          String   @db.VarChar(255)
-  content        String   @db.Text
-  department     String   @default("") @db.VarChar(50)
-  uploadedBy     String   @default("") @map("uploaded_by") @db.VarChar(100)
-  uploadedByName String   @default("") @map("uploaded_by_name") @db.VarChar(100)
-  fileType       String   @default("markdown") @map("file_type") @db.VarChar(20)
-  status         String   @default("draft") @db.VarChar(20)
-  viewCount      Int      @default(0) @map("view_count")
-  isDeleted      Boolean  @default(false) @map("is_delete")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  id           Int      @id @default(autoincrement())
+  title        String   @db.VarChar(255)
+  content      String   @db.Text
+  departmentId Int      @map("department_id")
+  userId       Int      @map("user_id")
+  fileType     String   @default("markdown") @map("file_type") @db.VarChar(20)
+  status       String   @default("draft") @db.VarChar(20)
+  viewCount    Int      @default(0) @map("view_count")
+  isDeleted    Boolean  @default(false) @map("is_delete")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
-  notes Note[]
-  exams Exam[]
+  department Department  @relation(fields: [departmentId], references: [id])
+  uploadedBy User        @relation(fields: [userId], references: [id])
+  notes      Note[]
+  exams      Exam[]
 
+  @@index([departmentId])
+  @@index([userId])
   @@map("sop_documents")
 }
 
@@ -66,8 +72,6 @@ model Exam {
   status         String   @default("draft") @db.VarChar(20)
   totalQuestions Int      @default(0) @map("total_questions")
   totalScore     Int      @default(0) @map("total_score")
-  createdBy      String   @default("") @map("created_by") @db.VarChar(100)
-  aiAnalysis     String?  @map("ai_analysis") @db.Text
   isDeleted      Boolean  @default(false) @map("is_delete")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
@@ -180,7 +184,6 @@ model Note {
   userId    Int      @map("user_id")
   userName  String   @default("") @map("user_name") @db.VarChar(100)
   content   String   @db.Text
-  pageRef   String?  @map("page_ref") @db.VarChar(255)
   isDeleted Boolean  @default(false) @map("is_delete")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

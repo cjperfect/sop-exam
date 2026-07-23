@@ -4,8 +4,9 @@ export interface SopDocument {
   id: number
   title: string
   content: string
+  departmentId: number
   department: string
-  uploadedBy: string
+  userId: number
   uploadedByName: string
   fileType: 'markdown' | 'pdf'
   status: SopStatus

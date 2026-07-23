@@ -33,12 +33,16 @@ export class SubmissionsService {
     examId?: number,
     sopId?: number,
     isPassed?: boolean,
+    userId?: number,
   ) {
     const skip = (page - 1) * pageSize
 
     // 构建 where 条件
     const where: Record<string, unknown> = { isDeleted: false }
 
+    if (userId) {
+      where.userId = userId
+    }
     if (userName) {
       where.userName = { contains: userName }
     }

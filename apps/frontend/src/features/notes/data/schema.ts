@@ -7,7 +7,6 @@ const noteSchema = z.object({
   userId: z.string(),
   userName: z.string(),
   content: z.string(),             // Markdown 笔记内容
-  pageRef: z.string().optional(),  // 关联的文档段落标题
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 })

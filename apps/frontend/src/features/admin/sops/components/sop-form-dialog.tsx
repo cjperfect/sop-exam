@@ -31,7 +31,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import type { SopDocument } from '@sop/shared'
-import { createSop, updateSop, fetchSops } from '@/features/sops/api'
+import { createSop, updateSop, fetchDepartments } from '@/features/sops/api'
 import { FileText, Send, X } from 'lucide-react'
 
 
@@ -58,7 +58,7 @@ function clearDraft() {
 
 const formSchema = z.object({
   title: z.string().min(1, '请输入 SOP 标题。'),
-  department: z.string().min(1, '请选择部门。'),
+  departmentId: z.coerce.number().min(1, '请选择部门。'),
   content: z.string().min(10, '请输入 SOP 正文内容。'),
 })
 
@@ -77,16 +77,13 @@ export function SopFormDialog({ open, onOpenChange, sop }: SopFormDialogProps) {
 
   const { data: departments = [] } = useQuery({
     queryKey: ["sops-departments"],
-    queryFn: async () => {
-      const res = await fetchSops({ page: 1, pageSize: 100 });
-      return [...new Set(res.items.map((s) => s.department))].sort();
-    },
+    queryFn: fetchDepartments,
     staleTime: 5 * 60 * 1000,
   })
 
   const form = useForm<SopFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { title: '', department: '', content: '' },
+    defaultValues: { title: '', departmentId: 0, content: '' },
   })
 
   // 编辑模式：预填数据 / 新建模式：恢复草稿
@@ -94,14 +91,14 @@ export function SopFormDialog({ open, onOpenChange, sop }: SopFormDialogProps) {
     if (sop) {
       form.reset({
         title: sop.title,
-        department: sop.department,
+        departmentId: sop.departmentId,
         content: sop.content,
       })
     } else if (open) {
       const draft = loadDraft()
-      form.reset(draft ?? { title: '', department: '', content: '' })
+      form.reset(draft ?? { title: '', departmentId: 0, content: '' })
     } else {
-      form.reset({ title: '', department: '', content: '' })
+      form.reset({ title: '', departmentId: 0, content: '' })
     }
   }, [sop, open, form])
 
@@ -109,7 +106,7 @@ export function SopFormDialog({ open, onOpenChange, sop }: SopFormDialogProps) {
   useEffect(() => {
     if (isEdit || !open) return
     const sub = form.watch((values) => {
-      if (values.title || values.department || values.content) {
+      if (values.title || values.departmentId || values.content) {
         saveDraft(values as SopFormValues)
       }
     })
@@ -118,7 +115,7 @@ export function SopFormDialog({ open, onOpenChange, sop }: SopFormDialogProps) {
 
   // 创建
   const createMutation = useMutation({
-    mutationFn: (input: { title: string; department: string; content: string; status: string }) =>
+    mutationFn: (input: SopFormValues & { status: string }) =>
       createSop(input as Partial<SopDocument>),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sops'] })
@@ -151,7 +148,7 @@ export function SopFormDialog({ open, onOpenChange, sop }: SopFormDialogProps) {
     if (!sop) return
     updateMutation.mutate({
       id: String(sop.id),
-      input: { title: values.title, department: values.department, content: values.content },
+      input: { title: values.title, departmentId: values.departmentId, content: values.content },
     })
   }
 
@@ -195,16 +192,16 @@ export function SopFormDialog({ open, onOpenChange, sop }: SopFormDialogProps) {
                   <FormMessage />
                 </FormItem>
               )} />
-              <FormField control={form.control} name='department' render={({ field }) => (
+              <FormField control={form.control} name='departmentId' render={({ field }) => (
                 <FormItem>
                   <FormLabel required>部门</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={(v) => field.onChange(Number(v))} value={String(field.value || '')}>
                     <FormControl>
                       <SelectTrigger><SelectValue placeholder='选择部门' /></SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {departments.map((d) => (
-                        <SelectItem key={d} value={d}>{d}</SelectItem>
+                        <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>

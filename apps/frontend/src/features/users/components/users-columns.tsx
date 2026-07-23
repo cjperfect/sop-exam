@@ -15,6 +15,11 @@ export const usersColumns: ColumnDef<User>[] = [
     cell: ({ row }) => row.getValue('employeeId') || '-',
   },
   {
+    accessorKey: 'department',
+    header: '部门',
+    cell: ({ row }) => row.getValue('department') || '-',
+  },
+  {
     accessorKey: 'role',
     header: '角色',
     cell: ({ row }) => (

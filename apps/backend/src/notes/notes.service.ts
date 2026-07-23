@@ -33,7 +33,6 @@ export class NotesService {
         userId: (data.userId as number) ?? 0,
         userName: (data.userName as string) ?? '',
         content: (data.content as string) ?? '',
-        pageRef: (data.pageRef as string) ?? null,
       },
     })
   }

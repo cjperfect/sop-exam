@@ -15,15 +15,9 @@ export class CreateNoteDto {
 
   @ApiProperty({ description: '笔记内容 (Markdown)' })
   content!: string
-
-  @ApiPropertyOptional({ description: '关联文档段落标题' })
-  pageRef?: string
 }
 
 export class UpdateNoteDto {
   @ApiPropertyOptional({ description: '笔记内容 (Markdown)' })
   content?: string
-
-  @ApiPropertyOptional({ description: '关联文档段落标题' })
-  pageRef?: string
 }

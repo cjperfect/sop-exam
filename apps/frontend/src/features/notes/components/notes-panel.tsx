@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/sheet'
 import { Separator } from '@/components/ui/separator'
 import { toast } from 'sonner'
-import { StickyNote, Plus, Trash2, Clock, Bookmark } from 'lucide-react'
+import { StickyNote, Plus, Trash2, Clock } from 'lucide-react'
 import { fetchNotes, createNote, deleteNote } from '../api'
 import { DeleteConfirmDialog } from '@/components/delete-confirm-dialog'
 
@@ -129,12 +129,6 @@ export function SopNotesPanel({ sopId, sopTitle }: SopNotesPanelProps) {
                   <Trash2 size={12} />
                 </Button>
 
-                {note.pageRef && (
-                  <span className='mb-1 inline-flex items-center gap-1 text-xs text-muted-foreground'>
-                    <Bookmark size={10} />
-                    {note.pageRef}
-                  </span>
-                )}
                 <div className='text-sm prose prose-sm dark:prose-invert max-w-none wrap-break-word' dangerouslySetInnerHTML={{ __html: note.content.startsWith('<') ? note.content : note.content.replace(/\n/g, '<br/>') }} />
                 <div className='mt-2 flex items-center justify-between text-xs text-muted-foreground'>
                   <span className='flex items-center gap-1'>

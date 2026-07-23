@@ -12,9 +12,7 @@ export interface ExamRecord {
   timeLimit: number
   status: string
   generatedBy: string
-  createdBy: string
   attempts: number
-  aiAnalysis?: string | null
   createdAt: string
   updatedAt: string
 }
@@ -90,11 +88,6 @@ export async function fetchSubmissions(params?: { page?: number; pageSize?: numb
 
 export async function deleteSubmission(id: string) {
   const { data } = await api.delete<{ success: boolean }>(`/api/submissions/${id}`)
-  return data
-}
-
-export async function updateExamAiAnalysis(examId: number, aiAnalysis: string) {
-  const { data } = await api.patch(`/api/exams/${examId}/ai-analysis`, { aiAnalysis })
   return data
 }
 

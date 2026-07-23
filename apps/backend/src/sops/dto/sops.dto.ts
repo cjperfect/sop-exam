@@ -7,11 +7,8 @@ export class CreateSopDto {
   @ApiProperty({ description: '内容' })
   content!: string
 
-  @ApiPropertyOptional({ description: '分类' })
-  department?: string
-
-  @ApiPropertyOptional({ description: '标签' })
-  tags?: string[]
+  @ApiPropertyOptional({ description: '部门 ID' })
+  departmentId?: number
 
   @ApiPropertyOptional({ description: '文件类型', enum: ['markdown', 'pdf'] })
   fileType?: 'markdown' | 'pdf'
@@ -27,11 +24,8 @@ export class UpdateSopDto {
   @ApiPropertyOptional({ description: '内容' })
   content?: string
 
-  @ApiPropertyOptional({ description: '分类' })
-  department?: string
-
-  @ApiPropertyOptional({ description: '标签' })
-  tags?: string[]
+  @ApiPropertyOptional({ description: '部门 ID' })
+  departmentId?: number
 
   @ApiPropertyOptional({ description: '文件类型', enum: ['markdown', 'pdf'] })
   fileType?: 'markdown' | 'pdf'

@@ -313,48 +313,6 @@ async function main() {
   })
   console.log('  ✅ 默认考试配置: 通过60分 / 总分100 / 限时30分钟 / 10题\n')
 
-  // ---- Users ----
-  console.log('📦 填充用户数据...')
-  const adminPassword = bcrypt.hashSync('admin123', 10)
-  await prisma.user.upsert({
-    where: { username: 'admin' },
-    update: {
-      password: adminPassword,
-      mustChangePassword: false,
-      role: 'super_admin',
-      employeeId: '800000',
-    },
-    create: {
-      username: 'admin',
-      employeeId: '800000',
-      password: adminPassword,
-      status: 'active',
-      role: 'super_admin',
-      mustChangePassword: false,
-    },
-  })
-  console.log('  ✅ 超级管理员: admin / admin123 / 800000')
-
-  const userPassword = bcrypt.hashSync('user123', 10)
-  await prisma.user.upsert({
-    where: { username: 'user' },
-    update: {
-      password: userPassword,
-      mustChangePassword: false,
-      role: 'user',
-      employeeId: '800001',
-    },
-    create: {
-      username: 'user',
-      employeeId: '800001',
-      password: userPassword,
-      status: 'active',
-      role: 'user',
-      mustChangePassword: false,
-    },
-  })
-  console.log('  ✅ 普通用户: user / user123 / 800001')
-
   // ---- Departments ----
   console.log('\n📦 填充部门数据...')
   for (const name of departments) {
@@ -372,16 +330,66 @@ async function main() {
     console.log(`  ✅ ${name}`)
   }
 
+  // ---- Users ----
+  console.log('\n📦 填充用户数据...')
+  const aiDeptId = 1 // AI与软件部门 ID
+  const adminPassword = bcrypt.hashSync('admin123', 10)
+
+  await prisma.user.upsert({
+    where: { username: 'admin' },
+    update: {
+      password: adminPassword,
+      mustChangePassword: false,
+      role: 'super_admin',
+      employeeId: '800000',
+      department: String(aiDeptId),
+    },
+    create: {
+      username: 'admin',
+      employeeId: '800000',
+      password: adminPassword,
+      status: 'active',
+      role: 'super_admin',
+      mustChangePassword: false,
+      department: String(aiDeptId),
+    },
+  })
+  console.log(`  ✅ 超级管理员: admin / admin123 / 800000 (部门ID: ${aiDeptId})`)
+
+  const userPassword = bcrypt.hashSync('user123', 10)
+  await prisma.user.upsert({
+    where: { username: 'user' },
+    update: {
+      password: userPassword,
+      mustChangePassword: false,
+      role: 'user',
+      employeeId: '800001',
+      department: String(aiDeptId),
+    },
+    create: {
+      username: 'user',
+      employeeId: '800001',
+      password: userPassword,
+      status: 'active',
+      role: 'user',
+      mustChangePassword: false,
+      department: String(aiDeptId),
+    },
+  })
+  console.log(`  ✅ 普通用户: user / user123 / 800001 (部门ID: ${aiDeptId})`)
+
   // ---- SOP Documents ----
   console.log('\n📦 填充SOP文档数据...')
+  const adminUserId = 1 // admin 的 user ID
+  let deptIndex = 0
   for (const [dept, sop] of Object.entries(sopTemplates)) {
+    deptIndex++
     await prisma.sopDocument.create({
       data: {
         title: sop.title,
         content: sop.content,
-        department: dept,
-        uploadedBy: 'admin',
-        uploadedByName: '超级管理员',
+        departmentId: deptIndex,
+        userId: adminUserId,
         fileType: 'markdown',
         status: 'published',
         viewCount: Math.floor(Math.random() * 200),

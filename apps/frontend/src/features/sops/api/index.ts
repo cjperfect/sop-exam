@@ -39,7 +39,7 @@ export async function updateSop(id: string, input: Partial<SopDocument>) {
 /** 获取部门列表 */
 export async function fetchDepartments() {
   const { data } = await api.get<Array<{ id: number; name: string; description: string }>>('/api/departments')
-  return data.map((d) => d.name)
+  return data
 }
 
 /** 删除 SOP */

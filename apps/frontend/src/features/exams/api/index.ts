@@ -168,10 +168,10 @@ export async function createSubmission(submission: {
   return data;
 }
 
-/** 获取提交记录 */
-export async function fetchSubmissions(page = 1): Promise<Submission[]> {
+/** 获取当前用户的提交记录 */
+export async function fetchMySubmissions(page = 1): Promise<Submission[]> {
   const { data } = await api.get<{ items: Submission[]; total: number }>(
-    "/api/submissions",
+    "/api/submissions/mine",
     { params: { page, pageSize: 100 } },
   );
   return data.items ?? [];
