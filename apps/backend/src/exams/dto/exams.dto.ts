@@ -13,9 +13,6 @@ class QuestionDto {
   @ApiProperty({ description: '正确答案' })
   answer!: string
 
-  @ApiProperty({ description: '解析' })
-  explanation!: string
-
   @ApiProperty({ description: '分值' })
   score!: number
 

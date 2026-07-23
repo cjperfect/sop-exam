@@ -106,7 +106,6 @@ export async function gradeExamAPI(params: {
     content: string;
     options: unknown;
     answer: string;
-    explanation: string;
     score: number;
     sortOrder: number;
     sopSource: string;
@@ -147,7 +146,6 @@ export async function createExam(exam: {
     content: string;
     options: string;
     answer: string;
-    explanation: string;
     score: number;
     sortOrder: number;
     sopSource?: string;

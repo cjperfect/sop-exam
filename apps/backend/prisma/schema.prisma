@@ -92,7 +92,6 @@ model Question {
   content     String   @db.Text
   options     Json?
   answer      String   @db.VarChar(500)
-  explanation String?  @db.Text
   score       Int      @default(0)
   sortOrder   Int      @default(0) @map("sort_order")
   sopSource   String?  @map("sop_source") @db.VarChar(500)

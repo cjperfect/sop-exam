@@ -247,7 +247,7 @@ export function InlineExam({ sop, onBack }: InlineExamProps) {
             question={currentQuestion}
             index={currentIndex}
             value={answers[currentIndex] ?? ""}
-            onChange={handleAnswerChange}
+            onChange={loading ? () => {} : handleAnswerChange}
           />
         )}
 
@@ -255,7 +255,7 @@ export function InlineExam({ sop, onBack }: InlineExamProps) {
           <Button
             variant="outline"
             onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))}
-            disabled={currentIndex === 0}
+            disabled={currentIndex === 0 || loading}
           >
             <ChevronLeft className="mr-1 h-4 w-4" />
             上一题
@@ -268,6 +268,7 @@ export function InlineExam({ sop, onBack }: InlineExamProps) {
               onClick={() =>
                 setCurrentIndex((i) => Math.min(questions.length - 1, i + 1))
               }
+              disabled={loading}
             >
               下一题
               <ChevronRight className="ml-1 h-4 w-4" />
@@ -275,7 +276,7 @@ export function InlineExam({ sop, onBack }: InlineExamProps) {
           ) : (
             <Button
               onClick={handleSubmit}
-              disabled={submitting}
+              disabled={submitting || loading}
               className="bg-teal-600 hover:bg-teal-700"
             >
               {submitting ? (

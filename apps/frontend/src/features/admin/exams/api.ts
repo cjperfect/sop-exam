@@ -38,7 +38,6 @@ export interface SubmissionRecord {
     score: number
     maxScore: number
     aiFeedback?: string
-    explanation?: string
     sopSource?: string
   }>
   totalScore: number

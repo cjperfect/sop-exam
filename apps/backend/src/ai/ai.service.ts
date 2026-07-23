@@ -45,7 +45,6 @@ export class AiService {
       content: string
       options: string
       answer: string
-      explanation: string
       score: number
       sortOrder: number
       sopSource: string
@@ -66,7 +65,6 @@ export class AiService {
             content: q.content,
             options: q.options ?? [],
             answer: q.answer ?? '',
-            explanation: q.explanation ?? '',
             score: q.score ?? 10,
             sortOrder: ++qIndex,
             sopSource: q.sopSource ?? '',
@@ -126,7 +124,7 @@ export class AiService {
         isCorrect,
         score,
         maxScore: q.score,
-        aiFeedback: isCorrect ? undefined : `正确答案是 ${q.answer}。${q.explanation}`,
+        aiFeedback: isCorrect ? undefined : `正确答案是 ${q.answer}。请参考 SOP 原文：${q.sopSource || '对应章节'}`,
         sopSource: q.sopSource,
       }
     })

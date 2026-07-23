@@ -13,12 +13,11 @@ export function buildGenerateExamPrompt(sopTitle: string, sopContent: string, qu
 5. 多选题5个选项（A/B/C/D/E），至少2个正确答案
 6. 判断题选项必须为 [{"key":"T","value":"正确"},{"key":"F","value":"错误"}]，答案只能是 T 或 F
 7. 填空题答案简洁明确，不超过50字
-8. 每题必须提供详细解析（explanation），说明正确原因或错误原因
-9. 每道题标注对应的SOP原文来源（sopSource），引用原文段落
-10. 总分100分，每题${perQuestionScore}分
+8. 每道题标注对应的SOP原文来源（sopSource），引用原文段落
+9. 总分100分，每题${perQuestionScore}分
 
 输出格式：每行一个完整的JSON对象，不要包含markdown代码块标记，不要输出其他文字。严格按以下结构逐行输出：
-{"type":"single_choice","content":"题目内容","options":[{"key":"A","value":"选项A"},{"key":"B","value":"选项B"},{"key":"C","value":"选项C"},{"key":"D","value":"选项D"}],"answer":"A","explanation":"解析","score":${perQuestionScore},"sortOrder":1,"sopSource":"SOP原文引用"}`
+{"type":"single_choice","content":"题目内容","options":[{"key":"A","value":"选项A"},{"key":"B","value":"选项B"},{"key":"C","value":"选项C"},{"key":"D","value":"选项D"}],"answer":"A","score":${perQuestionScore},"sortOrder":1,"sopSource":"SOP原文引用"}`
 
   const userPrompt = `请根据以下SOP文档内容生成${questionCount}道考题，每行一个JSON。
 

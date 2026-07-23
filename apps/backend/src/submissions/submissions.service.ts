@@ -184,7 +184,6 @@ export class SubmissionsService {
         score: detail.aiScore,
         maxScore: detail.question.score,
         aiFeedback: detail.aiFeedback,
-        explanation: detail.question.explanation,
         sopSource: detail.question.sopSource,
       }
     })
@@ -268,7 +267,7 @@ export class SubmissionsService {
         correctAnswer,
         isCorrect,
         aiScore: score,
-        aiFeedback: isCorrect ? null : `正确答案是 ${correctAnswer}。${q.explanation ?? ''}`,
+        aiFeedback: isCorrect ? null : `正确答案是 ${correctAnswer}。`,
       })
 
       questionResults.push({

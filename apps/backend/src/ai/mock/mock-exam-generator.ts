@@ -51,7 +51,6 @@ export function mockGenerateExam(
           { key: 'D', value: '以上都不对' },
         ],
         answer: correctLetter,
-        explanation: `正确答案是 ${correctLetter}。根据 SOP 规范：${point}`,
         score: 10,
         sortOrder: i + 1,
         sopSource: point,
@@ -66,9 +65,6 @@ export function mockGenerateExam(
           { key: 'F', value: '错误' },
         ],
         answer: isTrue ? 'T' : 'F',
-        explanation: isTrue
-          ? `正确。根据 SOP 规范：${point}`
-          : '错误。正确做法与上述描述不符，请查阅文档对应章节。',
         score: 10,
         sortOrder: i + 1,
         sopSource: point,
@@ -79,7 +75,6 @@ export function mockGenerateExam(
         content: `根据 SOP 规范，"${point.replace(/[0-9.、．]/g, '').trim()}" 中的关键要求是______。`,
         options: [],
         answer: '按照标准操作规程执行',
-        explanation: `请参考 SOP 文档中关于"${point}"的详细说明。`,
         score: 10,
         sortOrder: i + 1,
         sopSource: point,

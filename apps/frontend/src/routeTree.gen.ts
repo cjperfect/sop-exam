@@ -35,7 +35,6 @@ import { Route as AuthenticatedAdminSopsIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminNotesIndexRouteImport } from './routes/_authenticated/admin/notes/index'
 import { Route as AuthenticatedAdminExamsIndexRouteImport } from './routes/_authenticated/admin/exams/index'
 import { Route as AuthenticatedAdminDepartmentsIndexRouteImport } from './routes/_authenticated/admin/departments/index'
-import { Route as AuthenticatedExamsSubmissionIdResultRouteImport } from './routes/_authenticated/exams/$submissionId/result'
 import { Route as AuthenticatedAdminExamsStatsRouteImport } from './routes/_authenticated/admin/exams/stats'
 import { Route as AuthenticatedSopsSopIdExamIndexRouteImport } from './routes/_authenticated/sops/$sopId/exam/index'
 
@@ -172,12 +171,6 @@ const AuthenticatedAdminDepartmentsIndexRoute =
     path: '/admin/departments/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedExamsSubmissionIdResultRoute =
-  AuthenticatedExamsSubmissionIdResultRouteImport.update({
-    id: '/exams/$submissionId/result',
-    path: '/exams/$submissionId/result',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedAdminExamsStatsRoute =
   AuthenticatedAdminExamsStatsRouteImport.update({
     id: '/admin/exams/stats',
@@ -211,7 +204,6 @@ export interface FileRoutesByFullPath {
   '/sops/': typeof AuthenticatedSopsIndexRoute
   '/users/': typeof AuthenticatedUsersIndexRoute
   '/admin/exams/stats': typeof AuthenticatedAdminExamsStatsRoute
-  '/exams/$submissionId/result': typeof AuthenticatedExamsSubmissionIdResultRoute
   '/admin/departments/': typeof AuthenticatedAdminDepartmentsIndexRoute
   '/admin/exams/': typeof AuthenticatedAdminExamsIndexRoute
   '/admin/notes/': typeof AuthenticatedAdminNotesIndexRoute
@@ -239,7 +231,6 @@ export interface FileRoutesByTo {
   '/sops': typeof AuthenticatedSopsIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
   '/admin/exams/stats': typeof AuthenticatedAdminExamsStatsRoute
-  '/exams/$submissionId/result': typeof AuthenticatedExamsSubmissionIdResultRoute
   '/admin/departments': typeof AuthenticatedAdminDepartmentsIndexRoute
   '/admin/exams': typeof AuthenticatedAdminExamsIndexRoute
   '/admin/notes': typeof AuthenticatedAdminNotesIndexRoute
@@ -271,7 +262,6 @@ export interface FileRoutesById {
   '/_authenticated/sops/': typeof AuthenticatedSopsIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
   '/_authenticated/admin/exams/stats': typeof AuthenticatedAdminExamsStatsRoute
-  '/_authenticated/exams/$submissionId/result': typeof AuthenticatedExamsSubmissionIdResultRoute
   '/_authenticated/admin/departments/': typeof AuthenticatedAdminDepartmentsIndexRoute
   '/_authenticated/admin/exams/': typeof AuthenticatedAdminExamsIndexRoute
   '/_authenticated/admin/notes/': typeof AuthenticatedAdminNotesIndexRoute
@@ -301,7 +291,6 @@ export interface FileRouteTypes {
     | '/sops/'
     | '/users/'
     | '/admin/exams/stats'
-    | '/exams/$submissionId/result'
     | '/admin/departments/'
     | '/admin/exams/'
     | '/admin/notes/'
@@ -329,7 +318,6 @@ export interface FileRouteTypes {
     | '/sops'
     | '/users'
     | '/admin/exams/stats'
-    | '/exams/$submissionId/result'
     | '/admin/departments'
     | '/admin/exams'
     | '/admin/notes'
@@ -360,7 +348,6 @@ export interface FileRouteTypes {
     | '/_authenticated/sops/'
     | '/_authenticated/users/'
     | '/_authenticated/admin/exams/stats'
-    | '/_authenticated/exams/$submissionId/result'
     | '/_authenticated/admin/departments/'
     | '/_authenticated/admin/exams/'
     | '/_authenticated/admin/notes/'
@@ -568,13 +555,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminDepartmentsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/exams/$submissionId/result': {
-      id: '/_authenticated/exams/$submissionId/result'
-      path: '/exams/$submissionId/result'
-      fullPath: '/exams/$submissionId/result'
-      preLoaderRoute: typeof AuthenticatedExamsSubmissionIdResultRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/admin/exams/stats': {
       id: '/_authenticated/admin/exams/stats'
       path: '/admin/exams/stats'
@@ -598,7 +578,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSopsIndexRoute: typeof AuthenticatedSopsIndexRoute
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
   AuthenticatedAdminExamsStatsRoute: typeof AuthenticatedAdminExamsStatsRoute
-  AuthenticatedExamsSubmissionIdResultRoute: typeof AuthenticatedExamsSubmissionIdResultRoute
   AuthenticatedAdminDepartmentsIndexRoute: typeof AuthenticatedAdminDepartmentsIndexRoute
   AuthenticatedAdminExamsIndexRoute: typeof AuthenticatedAdminExamsIndexRoute
   AuthenticatedAdminNotesIndexRoute: typeof AuthenticatedAdminNotesIndexRoute
@@ -613,8 +592,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSopsIndexRoute: AuthenticatedSopsIndexRoute,
   AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
   AuthenticatedAdminExamsStatsRoute: AuthenticatedAdminExamsStatsRoute,
-  AuthenticatedExamsSubmissionIdResultRoute:
-    AuthenticatedExamsSubmissionIdResultRoute,
   AuthenticatedAdminDepartmentsIndexRoute:
     AuthenticatedAdminDepartmentsIndexRoute,
   AuthenticatedAdminExamsIndexRoute: AuthenticatedAdminExamsIndexRoute,

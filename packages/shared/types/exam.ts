@@ -11,7 +11,6 @@ export interface Question {
   content: string
   options: QuestionOption[]
   answer: string
-  explanation: string
   score: number
   sortOrder: number
   sopSource: string
@@ -40,6 +39,7 @@ export interface AnswerRecord {
   questionId: number
   questionType: QuestionType
   questionContent: string
+  options?: QuestionOption[] | null
   answer: string | string[]
   correctAnswer: string | string[]
   isCorrect: boolean
