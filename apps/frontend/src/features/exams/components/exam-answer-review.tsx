@@ -75,12 +75,10 @@ export function ExamAnswerReview({ answers }: ExamAnswerReviewProps) {
                 {record.answer || "未作答"}
               </span>
             </div>
-            {!record.isCorrect && (
-              <div className="flex gap-2">
-                <span className="shrink-0 text-muted-foreground">正确答案：</span>
-                <span className="text-teal-700">{record.correctAnswer}</span>
-              </div>
-            )}
+            <div className="flex gap-2">
+              <span className="shrink-0 text-muted-foreground">正确答案：</span>
+              <span className="text-teal-700">{record.correctAnswer}</span>
+            </div>
           </div>
 
           {record.aiFeedback && (
