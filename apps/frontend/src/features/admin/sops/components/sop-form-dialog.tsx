@@ -31,7 +31,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import type { SopDocument } from '@sop/shared'
-import { createSop, updateSop, fetchDepartments } from '@/features/sops/api'
+import { createSop, updateSop } from '@/features/admin/sops/api'
+import { fetchDepartments } from '@/features/sops/api'
 import { FileText, Send, X } from 'lucide-react'
 
 
@@ -118,7 +119,7 @@ export function SopFormDialog({ open, onOpenChange, sop }: SopFormDialogProps) {
     mutationFn: (input: SopFormValues & { status: string }) =>
       createSop(input as Partial<SopDocument>),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sops'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-sops'] })
       toast.success('SOP 已添加')
       clearDraft()
       form.reset()
@@ -131,7 +132,7 @@ export function SopFormDialog({ open, onOpenChange, sop }: SopFormDialogProps) {
     mutationFn: ({ id, input }: { id: string; input: Partial<SopDocument> }) =>
       updateSop(id, input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sops'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-sops'] })
       toast.success('SOP 已更新')
       clearDraft()
       onOpenChange(false)

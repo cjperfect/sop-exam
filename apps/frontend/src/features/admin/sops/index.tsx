@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
@@ -44,7 +44,7 @@ import { Pencil, Eye, Plus, SearchIcon, Trash2, Loader2, RotateCcw } from 'lucid
 import { toast } from 'sonner'
 import { SOP_DEPARTMENTS, SOP_STATUS_LABELS } from '@sop/shared'
 import type { SopDocument } from '@sop/shared'
-import { fetchSops, deleteSop } from '@/features/sops/api'
+import { fetchAdminSops, deleteAdminSop } from './api'
 import { SopFormDialog } from './components/sop-form-dialog'
 import { DeleteConfirmDialog } from '@/components/delete-confirm-dialog'
 import { Pagination } from '@/components/ui/pagination'
@@ -53,8 +53,10 @@ export function AdminSops() {
   const queryClient = useQueryClient()
   const [searchInput, setSearchInput] = useState('')
   const [deptInput, setDeptInput] = useState('all')
+  const [statusInput, setStatusInput] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [deptQuery, setDeptQuery] = useState('')
+  const [statusQuery, setStatusQuery] = useState('')
   const [uploadOpen, setUploadOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<SopDocument | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
@@ -64,31 +66,35 @@ export function AdminSops() {
   const handleSearch = () => {
     setSearchQuery(searchInput)
     setDeptQuery(deptInput)
+    setStatusQuery(statusInput)
     setPage(1)
   }
   const handleReset = () => {
     setSearchInput('')
     setDeptInput('all')
+    setStatusInput('all')
     setSearchQuery('')
     setDeptQuery('all')
+    setStatusQuery('all')
     setPage(1)
   }
 
   const { data: sopsRes, isLoading } = useQuery({
-    queryKey: ['sops', page, searchQuery, deptQuery],
-    queryFn: () => fetchSops({
+    queryKey: ['admin-sops', page, searchQuery, deptQuery, statusQuery],
+    queryFn: () => fetchAdminSops({
       page,
       pageSize,
       search: searchQuery || undefined,
+      status: statusQuery !== 'all' ? statusQuery : undefined,
     }),
   })
   const sops = sopsRes?.items ?? []
   const total = sopsRes?.total ?? 0
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteSop(id),
+    mutationFn: (id: string) => deleteAdminSop(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sops'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-sops'] })
       toast.success('SOP 已删除')
     },
   })
@@ -138,6 +144,20 @@ export function AdminSops() {
                     <SelectItem value='all'>全部部门</SelectItem>
                     {SOP_DEPARTMENTS.map((d) => (
                       <SelectItem key={d} value={d}>{d}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className='flex items-center gap-2'>
+                <Label htmlFor='sop-status' className='shrink-0'>状态筛选</Label>
+                <Select value={statusInput} onValueChange={setStatusInput}>
+                  <SelectTrigger id='sop-status' className='w-32'>
+                    <SelectValue placeholder='全部状态' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='all'>全部状态</SelectItem>
+                    {Object.entries(SOP_STATUS_LABELS).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>{label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

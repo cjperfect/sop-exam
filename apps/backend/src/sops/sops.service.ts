@@ -5,11 +5,11 @@ import { PrismaService } from '../prisma/prisma.service.js'
 export class SopsService {
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
-  async findAll(page = 1, pageSize = 10, search?: string, user?: { role?: string }) {
+  /** SOP 文档库查询 —— 只返回已发布的文档 */
+  async findAllPublished(page = 1, pageSize = 10, search?: string) {
     const skip = (page - 1) * pageSize
-    const where: Record<string, unknown> = { isDeleted: false }
+    const where: Record<string, unknown> = { isDeleted: false, status: 'published' }
     if (search) where.title = { contains: search }
-    if (!user || user.role !== 'admin') where.status = 'published'
     const [items, total] = await Promise.all([
       this.prisma.sopDocument.findMany({
         where: where as any,
@@ -20,7 +20,35 @@ export class SopsService {
       }),
       this.prisma.sopDocument.count({ where: where as any }),
     ])
-    const mappedItems = items.map((item) => ({
+    return { items: this.mapItems(items), total, page, pageSize }
+  }
+
+  /** SOP 管理端查询 —— 可过滤状态，返回所有文档（除已删除） */
+  async findAllAdmin(
+    page = 1,
+    pageSize = 10,
+    search?: string,
+    status?: string,
+  ) {
+    const skip = (page - 1) * pageSize
+    const where: Record<string, unknown> = { isDeleted: false }
+    if (search) where.title = { contains: search }
+    if (status) where.status = status
+    const [items, total] = await Promise.all([
+      this.prisma.sopDocument.findMany({
+        where: where as any,
+        orderBy: { updatedAt: 'desc' },
+        skip,
+        take: pageSize,
+        include: { department: { select: { name: true } }, uploadedBy: { select: { username: true } } },
+      }),
+      this.prisma.sopDocument.count({ where: where as any }),
+    ])
+    return { items: this.mapItems(items), total, page, pageSize }
+  }
+
+  private mapItems(items: any[]) {
+    return items.map((item) => ({
       id: item.id,
       title: item.title,
       content: item.content,
@@ -34,7 +62,6 @@ export class SopsService {
       createdAt: item.createdAt,
       updatedAt: item.updatedAt,
     }))
-    return { items: mappedItems, total, page, pageSize }
   }
 
   async findOne(id: number) {
@@ -61,7 +88,7 @@ export class SopsService {
   }
 
   async create(data: Record<string, unknown>) {
-    return this.prisma.sopDocument.create({
+    const doc = await this.prisma.sopDocument.create({
       data: {
         title: (data.title as string) ?? '',
         content: (data.content as string) ?? '',
